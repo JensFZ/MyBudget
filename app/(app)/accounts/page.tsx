@@ -69,8 +69,10 @@ export default function AllAccountsPage() {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
+        amount: data.amount,
         cleared: data.cleared,
         category_id: data.category_id,
+        transfer_account_id: data.transfer_account_id,
         payee: data.payee,
         memo: data.memo,
         flag: data.flag,

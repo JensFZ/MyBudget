@@ -58,6 +58,23 @@ interface Props {
 
 const today = new Date().toISOString().slice(0, 10);
 
+/** Evaluates chained expressions like "1,50+8+8+8" or "100-5,20+3" */
+function evalAmount(expr: string): number {
+  const s = expr.trim().replace(/,/g, '.');
+  // Split before each + or - (keeping the sign with the number)
+  const tokens = s.split(/(?=[+\-])/);
+  let result = 0;
+  for (const token of tokens) {
+    const num = parseFloat(token);
+    if (!isNaN(num)) result += num;
+  }
+  return result;
+}
+
+function fmt2(n: number): string {
+  return Math.abs(n).toFixed(2).replace('.', ',');
+}
+
 function parseCategoryValue(val: string): { category_id: number | null; transfer_account_id: number | null } {
   if (val.startsWith('t:')) return { category_id: null, transfer_account_id: Number(val.slice(2)) };
   if (val.startsWith('c:')) return { category_id: Number(val.slice(2)), transfer_account_id: null };
@@ -93,8 +110,8 @@ export default function InlineTransactionRow({
   const [payee, setPayee] = useState(initial?.payee ?? '');
   const [catValue, setCatValue] = useState(initCatVal);
   const [memo, setMemo] = useState(initial?.memo ?? '');
-  const [outflow, setOutflow] = useState(initAmount < 0 ? String(Math.abs(initAmount)).replace('.', ',') : '');
-  const [inflow, setInflow] = useState(initAmount > 0 ? String(initAmount).replace('.', ',') : '');
+  const [outflow, setOutflow] = useState(initAmount < 0 ? Math.abs(initAmount).toFixed(2).replace('.', ',') : '');
+  const [inflow, setInflow] = useState(initAmount > 0 ? initAmount.toFixed(2).replace('.', ',') : '');
   const [cleared, setCleared] = useState(initial?.cleared ?? 0);
   const [saving, setSaving] = useState(false);
 
@@ -106,10 +123,29 @@ export default function InlineTransactionRow({
     if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSave(); }
   }
 
+  function makeAmountKeyDown(setValue: (v: string) => void, clearOther: () => void) {
+    return (e: React.KeyboardEvent<HTMLInputElement>) => {
+      if (e.key === '+' || e.key === '-') {
+        const input = e.currentTarget;
+        const allSelected = input.selectionStart === 0 && input.selectionEnd === input.value.length && input.value.length > 0;
+        if (allSelected) {
+          e.preventDefault();
+          const newVal = input.value + e.key;
+          setValue(newVal);
+          clearOther();
+          setTimeout(() => input.setSelectionRange(newVal.length, newVal.length), 0);
+          return;
+        }
+      }
+      handleKey(e as unknown as KeyboardEvent);
+    };
+  }
+
   async function handleSave() {
-    const outNum = parseFloat(outflow.replace(',', '.'));
-    const inNum = parseFloat(inflow.replace(',', '.'));
-    const amount = !isNaN(inNum) && inflow !== '' ? inNum : !isNaN(outNum) && outflow !== '' ? -outNum : 0;
+    const outNum = outflow ? evalAmount(outflow) : 0;
+    const inNum  = inflow  ? evalAmount(inflow)  : 0;
+    // Negative outflow → income (+), negative inflow → expense (−)
+    const amount = inflow !== '' ? inNum : outflow !== '' ? -outNum : 0;
 
     const { category_id, transfer_account_id } = parseCategoryValue(catValue);
 
@@ -225,7 +261,13 @@ export default function InlineTransactionRow({
           placeholder={t('inline_outflow_placeholder')}
           value={outflow}
           onChange={e => { setOutflow(e.target.value); if (e.target.value) setInflow(''); }}
-          onKeyDown={handleKey}
+          onBlur={() => {
+            if (!outflow) return;
+            const result = evalAmount(outflow);
+            if (result < 0) { setOutflow(''); setInflow(fmt2(result)); }
+            else { setOutflow(fmt2(result)); }
+          }}
+          onKeyDown={makeAmountKeyDown(v => setOutflow(v), () => setInflow(''))}
           onFocus={e => e.target.select()}
         />
       </td>
@@ -237,7 +279,13 @@ export default function InlineTransactionRow({
           placeholder={t('inline_inflow_placeholder')}
           value={inflow}
           onChange={e => { setInflow(e.target.value); if (e.target.value) setOutflow(''); }}
-          onKeyDown={handleKey}
+          onBlur={() => {
+            if (!inflow) return;
+            const result = evalAmount(inflow);
+            if (result < 0) { setInflow(''); setOutflow(fmt2(result)); }
+            else { setInflow(fmt2(result)); }
+          }}
+          onKeyDown={makeAmountKeyDown(v => setInflow(v), () => setOutflow(''))}
           onFocus={e => e.target.select()}
         />
       </td>

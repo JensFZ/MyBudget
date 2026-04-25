@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { use } from 'react';
 import { fmt } from '@/lib/format';
 import { useI18n } from '@/lib/i18n';
-import { Plus, Link2, FileUp, RotateCcw, RotateCw, Search, Star, Edit2 } from 'lucide-react';
+import { Plus, Link2, FileUp, RotateCcw, RotateCw, Search, Star, Edit2, X, Check } from 'lucide-react';
 import TransactionTable from '@/components/TransactionTable';
 import type { Account, Category, CategoryGroup, SaveData } from '@/components/InlineTransactionRow';
 
@@ -46,6 +46,10 @@ export default function AccountPage({ params }: { params: Promise<{ id: string }
   const [addingNew, setAddingNew] = useState(false);
   const [search, setSearch] = useState('');
   const [showSearch, setShowSearch] = useState(false);
+  const [showEditAccount, setShowEditAccount] = useState(false);
+  const [editAccountName, setEditAccountName] = useState('');
+  const [editAccountType, setEditAccountType] = useState('');
+  const [editAccountBalance, setEditAccountBalance] = useState('');
 
   const loadAccount = useCallback(async () => {
     const res = await fetch(`/api/accounts/${id}`);
@@ -85,8 +89,10 @@ export default function AccountPage({ params }: { params: Promise<{ id: string }
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
+        amount: data.amount,
         cleared: data.cleared,
         category_id: data.category_id,
+        transfer_account_id: data.transfer_account_id,
         payee: data.payee,
         memo: data.memo,
         flag: data.flag,
@@ -112,8 +118,53 @@ export default function AccountPage({ params }: { params: Promise<{ id: string }
     loadTransactions();
   }
 
-  async function handleToggleStarred() {
+  function openEditAccount() {
     if (!account) return;
+    setEditAccountName(account.name);
+    setEditAccountType(account.type);
+    setEditAccountBalance(account.balance.toFixed(2).replace('.', ','));
+    setShowEditAccount(true);
+  }
+
+  async function saveEditAccount() {
+    if (!account) return;
+    const today = new Date().toISOString().slice(0, 10);
+
+    // Save name/type
+    await fetch(`/api/accounts/${id}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name: editAccountName.trim(), type: editAccountType }),
+    });
+
+    // Balance adjustment transaction if changed
+    const newBalance = parseFloat(editAccountBalance.replace(',', '.'));
+    if (!isNaN(newBalance)) {
+      const delta = Math.round((newBalance - account.balance) * 100) / 100;
+      if (delta !== 0) {
+        await fetch('/api/transactions', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            account_id: account.id,
+            category_id: null,
+            date: today,
+            amount: delta,
+            payee: t('account_adjustment_payee'),
+            memo: null,
+            cleared: 1,
+          }),
+        });
+      }
+    }
+
+    setShowEditAccount(false);
+    loadAccount();
+    loadTransactions();
+    window.dispatchEvent(new CustomEvent('accounts-updated'));
+  }
+
+  async function handleToggleStarred() {    if (!account) return;
     const newVal = account.starred ? 0 : 1;
     await fetch(`/api/accounts/${id}`, {
       method: 'PATCH',
@@ -150,7 +201,7 @@ export default function AccountPage({ params }: { params: Promise<{ id: string }
             </button>
           </div>
           <div className="flex items-center gap-2">
-            <button className="text-gray-400 hover:text-gray-700"><Edit2 size={16} /></button>
+            <button onClick={openEditAccount} className="text-gray-400 hover:text-gray-700"><Edit2 size={16} /></button>
             <button className="text-sm border border-gray-200 rounded-lg px-3 py-1.5 text-gray-600 hover:bg-gray-50">
               {t('account_reconcile')}
             </button>
@@ -244,6 +295,66 @@ export default function AccountPage({ params }: { params: Promise<{ id: string }
           onToggleCleared={handleToggleCleared}
         />
       </div>
+
+      {/* Edit account modal */}
+      {showEditAccount && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-black/40" onClick={() => setShowEditAccount(false)} />
+          <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-sm p-6">
+            <div className="flex items-center justify-between mb-5">
+              <h2 className="text-base font-semibold text-gray-900">{t('account_edit_title')}</h2>
+              <button onClick={() => setShowEditAccount(false)} className="text-gray-400 hover:text-gray-600 p-1 rounded hover:bg-gray-100">
+                <X size={18} />
+              </button>
+            </div>
+            <div className="space-y-4">
+              <div>
+                <label className="block text-xs font-medium text-gray-600 mb-1">{t('account_edit_name')}</label>
+                <input
+                  autoFocus
+                  className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm outline-none focus:border-blue-400 focus:ring-1 focus:ring-blue-100"
+                  value={editAccountName}
+                  onChange={e => setEditAccountName(e.target.value)}
+                  onKeyDown={e => { if (e.key === 'Enter') saveEditAccount(); if (e.key === 'Escape') setShowEditAccount(false); }}
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-gray-600 mb-1">{t('account_edit_type')}</label>
+                <select
+                  className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm outline-none focus:border-blue-400 bg-white"
+                  value={editAccountType}
+                  onChange={e => setEditAccountType(e.target.value)}
+                >
+                  <option value="cash">{t('account_type_cash')}</option>
+                  <option value="credit">{t('account_type_credit')}</option>
+                  <option value="tracking">{t('account_type_tracking')}</option>
+                  <option value="closed">{t('account_type_closed')}</option>
+                </select>
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-gray-600 mb-1">{t('account_edit_balance')}</label>
+                <input
+                  type="text"
+                  inputMode="decimal"
+                  className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm outline-none focus:border-blue-400 focus:ring-1 focus:ring-blue-100 text-right font-mono"
+                  value={editAccountBalance}
+                  onChange={e => setEditAccountBalance(e.target.value)}
+                  onKeyDown={e => { if (e.key === 'Enter') saveEditAccount(); if (e.key === 'Escape') setShowEditAccount(false); }}
+                />
+                <p className="text-xs text-gray-400 mt-1">{t('account_edit_balance_hint')}</p>
+              </div>
+            </div>
+            <div className="flex justify-end gap-2 mt-6">
+              <button onClick={() => setShowEditAccount(false)} className="px-4 py-2 text-sm text-gray-600 hover:text-gray-800 rounded-lg hover:bg-gray-100">
+                {t('settings_cancel')}
+              </button>
+              <button onClick={saveEditAccount} className="flex items-center gap-1.5 px-4 py-2 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium">
+                <Check size={14} /> {t('settings_save')}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
