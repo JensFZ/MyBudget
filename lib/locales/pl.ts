@@ -1,0 +1,192 @@
+import type { TranslationSet, LocaleMeta } from './_types';
+
+export const meta: LocaleMeta = {
+  nativeName: 'Polski',
+};
+
+const t: TranslationSet = {
+  months_short: ['Sty', 'Lut', 'Mar', 'Kwi', 'Maj', 'Cze', 'Lip', 'Sie', 'Wrz', 'Paź', 'Lis', 'Gru'],
+  months_long: ['Styczeń', 'Luty', 'Marzec', 'Kwiecień', 'Maj', 'Czerwiec', 'Lipiec', 'Sierpień', 'Wrzesień', 'Październik', 'Listopad', 'Grudzień'],
+
+  // Navigation
+  nav_plan: 'Plan',
+  nav_reflect: 'Analiza',
+  nav_all_accounts: 'Wszystkie konta',
+
+  // Sidebar
+  sidebar_add_account: 'Dodaj konto',
+  sidebar_bank_connections: 'Połączenia bankowe',
+  sidebar_refer_friend: 'Zaproś znajomego',
+  sidebar_account_group_cash: 'Gotówka',
+  sidebar_account_group_credit: 'Karty kredytowe',
+  sidebar_account_group_tracking: 'Śledzenie',
+  sidebar_account_group_closed: 'Zamknięte',
+
+  // Settings
+  settings_title: 'Ustawienia',
+  settings_profile: 'Profil',
+  settings_name: 'Nazwa',
+  settings_email: 'E-mail',
+  settings_avatar_hint: 'Kliknij obraz, aby przesłać zdjęcie',
+  settings_avatar_upload: 'Prześlij zdjęcie',
+  settings_avatar_remove: 'Usuń zdjęcie',
+  settings_language: 'Język',
+  settings_cancel: 'Anuluj',
+  settings_save: 'Zapisz',
+  settings_security: 'Bezpieczeństwo',
+  settings_2fa_status_on: '2FA jest aktywne',
+  settings_2fa_status_off: '2FA nie jest aktywne',
+  settings_2fa_enable: 'Aktywuj 2FA',
+  settings_2fa_disable: 'Dezaktywuj',
+  settings_2fa_scan_hint: 'Zeskanuj kod QR aplikacją uwierzytelniającą i potwierdź wygenerowanym kodem.',
+  settings_2fa_confirm_disable: 'Wprowadź aktualny kod, aby dezaktywować 2FA.',
+  settings_2fa_verify: 'Potwierdź',
+  settings_2fa_back: 'Wstecz',
+  settings_logout: 'Wyloguj',
+
+  // Vault
+  vault_new: 'Utwórz nowy vault',
+  vault_new_name_placeholder: 'Mój budżet',
+  vault_members_title: 'Członkowie',
+  vault_invite_generate: 'Generuj link zaproszenia',
+  vault_invite_copied: 'Link skopiowany!',
+  vault_invite_link_label: 'Link zaproszenia (ważny 7 dni)',
+  vault_member_role_owner: 'Właściciel',
+  vault_member_role_member: 'Członek',
+  vault_member_remove: 'Usuń',
+
+
+  plan_heute: 'Dziś',
+  plan_ready_to_assign: 'Gotowe do przypisania',
+  plan_add_member: 'Dodaj członka',
+  plan_add_transaction: 'Dodaj transakcję',
+  plan_filter_all: 'Wszystkie',
+  plan_filter_overspent: 'Przekroczone',
+  plan_filter_underfunded: 'Niedofinansowane',
+  plan_filter_overfunded: 'Nadmiarowe',
+  plan_filter_available: 'Dostępne środki',
+  plan_filter_overspent_count: '🔴 {count} przekroczone',
+  plan_category_group: 'Grupa kategorii',
+  plan_loading: 'Ładowanie...',
+  plan_col_category: 'Kategoria',
+  plan_col_assigned: 'Przypisano',
+  plan_col_activity: 'Aktywność',
+  plan_col_available: 'Dostępne',
+
+  // BudgetRow
+  budget_overspent_sub: 'Przekroczono. {abs} z {assigned}',
+  budget_funded: 'Sfinansowane',
+  budget_needed_eventually: 'Jeszcze potrzeba {amount}',
+
+  // PlanRightPanel
+  panel_summary_title: 'Podsumowanie {month}',
+  panel_left_over: 'Pozostałe z poprzedniego miesiąca',
+  panel_assigned_in: 'Przypisano w {month}',
+  panel_activity: 'Aktywność',
+  panel_available: 'Dostępne',
+  panel_cost_to_be_me: 'Moje miesięczne koszty',
+  panel_targets: 'Cele na {month}',
+  panel_enter_income: 'Wprowadź oczekiwany dochód',
+  panel_auto_assign: 'Auto-przypisz',
+  panel_underfunded: 'Niedofinansowane',
+  panel_assigned_last_month: 'Przypisano w zeszłym miesiącu',
+  panel_spent_last_month: 'Wydano w zeszłym miesiącu',
+  panel_reduce_overfunding: 'Zmniejsz nadfinansowanie',
+  panel_reset_available: 'Zeruj dostępne kwoty',
+
+  // Transaction table
+  tx_col_account: 'Konto',
+  tx_col_date: 'Data',
+  tx_col_payee: 'Odbiorca',
+  tx_col_category: 'Kategoria',
+  tx_col_memo: 'Notatka',
+  tx_col_outflow: 'Wydatki',
+  tx_col_inflow: 'Wpływy',
+  tx_col_cleared: '✓',
+  tx_no_transactions: 'Brak transakcji.',
+  tx_needs_category: 'Wymaga kategorii',
+  tx_transfer_badge: 'Przelew',
+
+  // InlineTransactionRow
+  inline_no_category: '— Brak kategorii —',
+  inline_transfer_group: '── Przelew na konto ──',
+  inline_transfer_to: 'Przelew: {name}',
+  inline_payee_placeholder: 'Odbiorca',
+  inline_memo_placeholder: 'Notatka',
+  inline_outflow_placeholder: '0,00',
+  inline_inflow_placeholder: '0,00',
+  inline_save_title: 'Zapisz (Enter)',
+  inline_cancel_title: 'Anuluj (Esc)',
+  inline_delete_title: 'Usuń',
+
+  // Accounts page
+  accounts_title: 'Wszystkie konta',
+  accounts_cleared: 'Saldo rozliczone',
+  accounts_uncleared: 'Saldo nierozliczone',
+  accounts_working: 'Saldo robocze',
+  accounts_needs_category: '🔔 {count} transakcji wymaga kategorii.',
+  accounts_needs_category_view: 'Pokaż',
+  accounts_add_transaction: 'Dodaj transakcję',
+  accounts_link_account: 'Połącz konto',
+  accounts_file_import: 'Import pliku',
+  accounts_search: 'Szukaj',
+  accounts_search_placeholder: 'Szukaj transakcji...',
+  accounts_loading: 'Ładowanie...',
+
+  // Account detail page
+  account_not_yet_reconciled: 'Jeszcze nie rozliczone',
+  account_reconcile: 'Rozlicz',
+  account_record_payment: 'Zarejestruj płatność',
+  account_type_cash: 'Konto bieżące',
+  account_type_credit: 'Karta kredytowa',
+  account_type_tracking: 'Śledzenie',
+  account_type_closed: 'Zamknięte',
+
+  // Add Account Dialog
+  add_account_title: 'Dodaj konto',
+  add_account_add_type_title: 'Dodaj {type}',
+  add_account_budget_section: 'Konta budżetowe',
+  add_account_budget_desc: 'Te konta wpływają na budżet – każde euro jest przypisywane.',
+  add_account_tracking_section: 'Konta śledzące',
+  add_account_tracking_desc: 'Śledź aktywa i zobowiązania poza budżetem.',
+  add_account_name_label: 'Nazwa konta',
+  add_account_balance_label: 'Bieżące saldo',
+  add_account_balance_hint: 'Wprowadź saldo na dzień {date}.',
+  add_account_credit_hint: ' Dla kart kredytowych: wpisz wartość ujemną, jeśli jesteś zadłużony.',
+  add_account_cancel: 'Anuluj',
+  add_account_save: 'Dodaj konto',
+  add_account_saving: 'Dodawanie...',
+  add_account_name_placeholder: 'Moje {type}',
+
+  // Account subtypes
+  acct_checking: 'Konto bieżące',
+  acct_checking_desc: 'Twoje codzienne konto bankowe',
+  acct_savings: 'Konto oszczędnościowe',
+  acct_savings_desc: 'Konto oszczędnościowe wysokooprocentowane',
+  acct_cash: 'Gotówka',
+  acct_cash_desc: 'Fizyczna gotówka w portfelu',
+  acct_credit: 'Karta kredytowa',
+  acct_credit_desc: 'Karta kredytowa lub charge',
+  acct_loc: 'Linia kredytowa',
+  acct_loc_desc: 'Elastyczna linia kredytowa lub debet',
+  acct_asset: 'Aktywa',
+  acct_asset_desc: 'Inwestycja, nieruchomość lub inny aktyw',
+  acct_real_estate: 'Nieruchomość',
+  acct_real_estate_desc: 'Śledzenie wartości nieruchomości',
+  acct_vehicle: 'Pojazd',
+  acct_vehicle_desc: 'Samochód lub pojazd',
+  acct_loan: 'Pożyczka',
+  acct_loan_desc: 'Hipoteka, pożyczka osobista lub dług',
+
+  // Reflect page
+  reflect_title: 'Analiza',
+  reflect_loading: 'Ładowanie...',
+  reflect_net_worth: 'Majątek netto',
+  reflect_assets: 'Aktywa',
+  reflect_debts: 'Zobowiązania',
+  reflect_age_of_money: 'Wiek pieniądza',
+  reflect_age_days: 'dni',
+  reflect_age_desc: 'Średnia liczba dni między zarobkiem a wydaniem. Więcej = większa poduszka finansowa.',
+};
+
+export default t;

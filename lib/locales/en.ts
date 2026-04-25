@@ -1,0 +1,192 @@
+import type { TranslationSet, LocaleMeta } from './_types';
+
+export const meta: LocaleMeta = {
+  nativeName: 'English',
+};
+
+const t: TranslationSet = {
+  months_short: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
+  months_long: ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'],
+
+  // Navigation
+  nav_plan: 'Plan',
+  nav_reflect: 'Reflect',
+  nav_all_accounts: 'All Accounts',
+
+  // Sidebar
+  sidebar_add_account: 'Add Account',
+  sidebar_bank_connections: 'Bank Connections',
+  sidebar_refer_friend: 'Refer a Friend',
+  sidebar_account_group_cash: 'Cash',
+  sidebar_account_group_credit: 'Credit',
+  sidebar_account_group_tracking: 'Tracking',
+  sidebar_account_group_closed: 'Closed',
+
+  // Settings
+  settings_title: 'Settings',
+  settings_profile: 'Profile',
+  settings_name: 'Name',
+  settings_email: 'Email',
+  settings_avatar_hint: 'Click the image to upload a photo',
+  settings_avatar_upload: 'Upload photo',
+  settings_avatar_remove: 'Remove photo',
+  settings_language: 'Language',
+  settings_cancel: 'Cancel',
+  settings_save: 'Save',
+  settings_security: 'Security',
+  settings_2fa_status_on: '2FA is enabled',
+  settings_2fa_status_off: '2FA is not enabled',
+  settings_2fa_enable: 'Enable 2FA',
+  settings_2fa_disable: 'Disable',
+  settings_2fa_scan_hint: 'Scan the QR code with your authenticator app and confirm with the generated code.',
+  settings_2fa_confirm_disable: 'Enter your current code to disable 2FA.',
+  settings_2fa_verify: 'Confirm',
+  settings_2fa_back: 'Back',
+  settings_logout: 'Log out',
+
+  // Vault
+  vault_new: 'Create new vault',
+  vault_new_name_placeholder: 'My Budget',
+  vault_members_title: 'Members',
+  vault_invite_generate: 'Generate invite link',
+  vault_invite_copied: 'Link copied!',
+  vault_invite_link_label: 'Invite link (valid 7 days)',
+  vault_member_role_owner: 'Owner',
+  vault_member_role_member: 'Member',
+  vault_member_remove: 'Remove',
+
+
+  plan_heute: 'Today',
+  plan_ready_to_assign: 'Ready to Assign',
+  plan_add_member: 'Add Member',
+  plan_add_transaction: 'Add Transaction',
+  plan_filter_all: 'All',
+  plan_filter_overspent: 'Overspent',
+  plan_filter_underfunded: 'Underfunded',
+  plan_filter_overfunded: 'Overfunded',
+  plan_filter_available: 'Money Available',
+  plan_filter_overspent_count: '🔴 {count} Overspent',
+  plan_category_group: 'Category Group',
+  plan_loading: 'Loading...',
+  plan_col_category: 'Category',
+  plan_col_assigned: 'Assigned',
+  plan_col_activity: 'Activity',
+  plan_col_available: 'Available',
+
+  // BudgetRow
+  budget_overspent_sub: 'Overspent. {abs} of {assigned}',
+  budget_funded: 'Funded',
+  budget_needed_eventually: '{amount} more needed eventually',
+
+  // PlanRightPanel
+  panel_summary_title: "{month}'s Summary",
+  panel_left_over: 'Left Over from Last Month',
+  panel_assigned_in: 'Assigned in {month}',
+  panel_activity: 'Activity',
+  panel_available: 'Available',
+  panel_cost_to_be_me: 'Cost to Be Me',
+  panel_targets: "{month}'s Targets",
+  panel_enter_income: 'Enter your expected income',
+  panel_auto_assign: 'Auto-Assign',
+  panel_underfunded: 'Underfunded',
+  panel_assigned_last_month: 'Assigned Last Month',
+  panel_spent_last_month: 'Spent Last Month',
+  panel_reduce_overfunding: 'Reduce Overfunding',
+  panel_reset_available: 'Reset Available Amounts',
+
+  // Transaction table
+  tx_col_account: 'Account',
+  tx_col_date: 'Date',
+  tx_col_payee: 'Payee',
+  tx_col_category: 'Category',
+  tx_col_memo: 'Memo',
+  tx_col_outflow: 'Outflow',
+  tx_col_inflow: 'Inflow',
+  tx_col_cleared: '✓',
+  tx_no_transactions: 'No transactions found.',
+  tx_needs_category: 'This needs a category',
+  tx_transfer_badge: 'Transfer',
+
+  // InlineTransactionRow
+  inline_no_category: '— No category —',
+  inline_transfer_group: '── Transfer to Account ──',
+  inline_transfer_to: 'Transfer: {name}',
+  inline_payee_placeholder: 'Payee',
+  inline_memo_placeholder: 'Memo',
+  inline_outflow_placeholder: '0.00',
+  inline_inflow_placeholder: '0.00',
+  inline_save_title: 'Save (Enter)',
+  inline_cancel_title: 'Cancel (Esc)',
+  inline_delete_title: 'Delete',
+
+  // Accounts page
+  accounts_title: 'All Accounts',
+  accounts_cleared: 'Cleared Balance',
+  accounts_uncleared: 'Uncleared Balance',
+  accounts_working: 'Working Balance',
+  accounts_needs_category: '🔔 {count} transactions need a category.',
+  accounts_needs_category_view: 'View',
+  accounts_add_transaction: 'Add Transaction',
+  accounts_link_account: 'Link Account',
+  accounts_file_import: 'File Import',
+  accounts_search: 'Search',
+  accounts_search_placeholder: 'Search transactions...',
+  accounts_loading: 'Loading...',
+
+  // Account detail page
+  account_not_yet_reconciled: 'Not Yet Reconciled',
+  account_reconcile: 'Reconcile',
+  account_record_payment: 'Record Payment',
+  account_type_cash: 'Checking',
+  account_type_credit: 'Credit Card',
+  account_type_tracking: 'Tracking',
+  account_type_closed: 'Closed',
+
+  // Add Account Dialog
+  add_account_title: 'Add Account',
+  add_account_add_type_title: 'Add {type}',
+  add_account_budget_section: 'Budget Accounts',
+  add_account_budget_desc: 'These accounts affect your budget — every dollar gets assigned.',
+  add_account_tracking_section: 'Tracking Accounts',
+  add_account_tracking_desc: 'Track assets and liabilities outside your budget.',
+  add_account_name_label: 'Account Name',
+  add_account_balance_label: 'Current Balance',
+  add_account_balance_hint: 'Enter the current balance as of {date}.',
+  add_account_credit_hint: ' For credit cards, enter a negative value if you owe money.',
+  add_account_cancel: 'Cancel',
+  add_account_save: 'Add Account',
+  add_account_saving: 'Adding...',
+  add_account_name_placeholder: 'My {type}',
+
+  // Account subtypes
+  acct_checking: 'Checking',
+  acct_checking_desc: 'Your everyday bank account',
+  acct_savings: 'Savings',
+  acct_savings_desc: 'High-yield savings account',
+  acct_cash: 'Cash',
+  acct_cash_desc: 'Physical cash in your wallet',
+  acct_credit: 'Credit Card',
+  acct_credit_desc: 'Credit card or charge card',
+  acct_loc: 'Line of Credit',
+  acct_loc_desc: 'Flexible credit line or overdraft',
+  acct_asset: 'Asset',
+  acct_asset_desc: 'Investment, property, or other asset',
+  acct_real_estate: 'Real Estate',
+  acct_real_estate_desc: 'Property value tracking',
+  acct_vehicle: 'Vehicle',
+  acct_vehicle_desc: 'Car or vehicle value',
+  acct_loan: 'Loan',
+  acct_loan_desc: 'Mortgage, personal loan, or debt owed',
+
+  // Reflect page
+  reflect_title: 'Reflect',
+  reflect_loading: 'Loading...',
+  reflect_net_worth: 'Net Worth',
+  reflect_assets: 'Assets',
+  reflect_debts: 'Debts',
+  reflect_age_of_money: 'Age of Money',
+  reflect_age_days: 'days',
+  reflect_age_desc: 'Average days between earning and spending. Higher = more financial buffer.',
+};
+
+export default t;
