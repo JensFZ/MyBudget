@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { fmt } from '@/lib/format';
 import { useI18n } from '@/lib/i18n';
-import { Plus, Link2, FileUp, RotateCcw, RotateCw, Search } from 'lucide-react';
+import { Plus, FileUp, RotateCcw, RotateCw, Search } from 'lucide-react';
 import TransactionTable from '@/components/TransactionTable';
 import type { Account, Category, CategoryGroup, SaveData } from '@/components/InlineTransactionRow';
 
@@ -135,9 +135,7 @@ export default function AllAccountsPage() {
         >
           <Plus size={14} /> {t('accounts_add_transaction')}
         </button>
-        <button className="flex items-center gap-1 text-sm text-gray-600 border border-gray-200 rounded-lg px-3 py-1.5 hover:bg-gray-50">
-          <Link2 size={14} /> {t('accounts_link_account')}
-        </button>
+
         <button className="flex items-center gap-1 text-sm text-gray-600 border border-gray-200 rounded-lg px-3 py-1.5 hover:bg-gray-50">
           <FileUp size={14} /> {t('accounts_file_import')}
         </button>
