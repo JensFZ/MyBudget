@@ -1,7 +1,7 @@
 'use client';
 
 import { fmt } from '@/lib/format';
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Clock, CheckCircle2 } from 'lucide-react';
 import { useI18n } from '@/lib/i18n';
 
@@ -31,8 +31,16 @@ export default function BudgetRow({
   onAssignChange,
 }: BudgetRowProps) {
   const { t } = useI18n();
+  const num = Number(assigned) || 0;
   const [editing, setEditing] = useState(false);
-  const [editVal, setEditVal] = useState(assigned.toFixed(2).replace('.', ','));
+  const [editVal, setEditVal] = useState(num.toFixed(2).replace('.', ','));
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (!editing) {
+      setEditVal((Number(assigned) || 0).toFixed(2).replace('.', ','));
+    }
+  }, [assigned, editing]);
 
   const overspent = available < 0;
   const funded = goalAmount ? available >= goalAmount : false;
@@ -47,8 +55,10 @@ export default function BudgetRow({
   }
 
   function handleFocus() {
-    setEditVal(assigned === 0 ? '' : assigned.toFixed(2).replace('.', ','));
+    const formatted = (Number(assigned) || 0).toFixed(2).replace('.', ',');
+    setEditVal(formatted);
     setEditing(true);
+    setTimeout(() => inputRef.current?.select(), 0);
   }
 
   const availableBadge = () => {
@@ -108,6 +118,7 @@ export default function BudgetRow({
       <td className="px-3 py-2 text-right w-36">
         {editing ? (
           <input
+            ref={inputRef}
             autoFocus
             className="text-sm text-right w-28 border border-blue-400 rounded px-2 py-0.5 outline-none"
             value={editVal}
