@@ -11,51 +11,77 @@ export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
   const month = searchParams.get('month') ?? new Date().toISOString().slice(0, 7);
 
+  // First day of the following month — used to include all dates within `month`
+  const [yNum, mNum] = month.split('-').map(Number);
+  const nextMonth = mNum === 12
+    ? `${yNum + 1}-01`
+    : `${yNum}-${String(mNum + 1).padStart(2, '0')}`;
+
   const budgets = db.prepare(`
     SELECT
-      c.id as category_id,
-      c.name as category_name,
+      c.id   AS category_id,
+      c.name AS category_name,
       c.group_id,
       c.is_goal,
       c.goal_amount,
       c.goal_type,
-      cg.name as group_name,
-      cg.sort_order as group_sort,
-      COALESCE(b.assigned, 0) as assigned,
+      cg.name       AS group_name,
+      cg.sort_order AS group_sort,
+
+      -- This month's assigned (for display in the Assigned column)
+      COALESCE(b.assigned, 0) AS assigned,
+
+      -- This month's activity (for display in the Activity column)
       COALESCE(
-        (SELECT SUM(t.amount) FROM transactions t
+        (SELECT SUM(t.amount)
+         FROM transactions t
          JOIN accounts a ON t.account_id = a.id
-         WHERE t.category_id = c.id AND t.date LIKE ? AND a.vault_id = ?),
+         WHERE t.category_id = c.id
+           AND t.date >= ? AND t.date < ?
+           AND a.vault_id = ?),
         0
-      ) as activity,
-      COALESCE(b.assigned, 0) + COALESCE(
-        (SELECT SUM(t.amount) FROM transactions t
+      ) AS activity,
+
+      -- Cumulative available = all assigned up to this month
+      --                      + all activity up to and including this month
+      COALESCE(
+        (SELECT SUM(b2.assigned)
+         FROM budgets b2
+         WHERE b2.category_id = c.id AND b2.month <= ?),
+        0
+      ) + COALESCE(
+        (SELECT SUM(t.amount)
+         FROM transactions t
          JOIN accounts a ON t.account_id = a.id
-         WHERE t.category_id = c.id AND t.date LIKE ? AND a.vault_id = ?),
+         WHERE t.category_id = c.id
+           AND t.date < ?
+           AND a.vault_id = ?),
         0
-      ) as available
+      ) AS available
+
     FROM categories c
     LEFT JOIN category_groups cg ON c.group_id = cg.id
     LEFT JOIN budgets b ON b.category_id = c.id AND b.month = ?
     WHERE cg.vault_id = ?
     ORDER BY cg.sort_order, c.sort_order
-  `).all(`${month}%`, ctx.vaultId, `${month}%`, ctx.vaultId, month, ctx.vaultId);
+  `).all(
+    `${month}-01`, nextMonth, ctx.vaultId,   // activity: this month only
+    month,                                    // cumulative assigned: <= month
+    nextMonth, ctx.vaultId,                   // cumulative activity: < nextMonth
+    month, ctx.vaultId                        // JOIN condition + WHERE
+  );
 
   const accounts = db.prepare(
     "SELECT balance FROM accounts WHERE vault_id = ? AND on_budget = 1 AND type != 'credit'"
   ).all(ctx.vaultId) as { balance: number }[];
-  const totalBalance = accounts.reduce((sum, a) => sum + a.balance, 0);
+  const totalBalance = accounts.reduce((s, a) => s + a.balance, 0);
 
-  // Only sum budgets for categories in this vault
-  const assignedRow = db.prepare(`
-    SELECT COALESCE(SUM(b.assigned), 0) as total
-    FROM budgets b
-    JOIN categories c ON b.category_id = c.id
-    JOIN category_groups cg ON c.group_id = cg.id
-    WHERE b.month = ? AND cg.vault_id = ?
-  `).get(month, ctx.vaultId) as { total: number };
+  // readyToAssign = money in accounts not yet claimed by any envelope
+  // = totalBalance - sum of all category available balances
+  const totalAvailable = (budgets as { available: number }[]).reduce((s, b) => s + b.available, 0);
+  const readyToAssign = totalBalance - totalAvailable;
 
-  return NextResponse.json({ budgets, readyToAssign: totalBalance - assignedRow.total, month });
+  return NextResponse.json({ budgets, readyToAssign, month });
 }
 
 export async function PUT(req: NextRequest) {
@@ -64,7 +90,6 @@ export async function PUT(req: NextRequest) {
 
   const { category_id, month, assigned } = await req.json();
 
-  // Verify category belongs to vault
   const cat = db.prepare(`
     SELECT c.id FROM categories c
     JOIN category_groups cg ON c.group_id = cg.id
