@@ -1,11 +1,10 @@
 'use client';
 
-import { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { fmt } from '@/lib/format';
 import { useI18n } from '@/lib/i18n';
 import { ChevronDown, ChevronRight, Plus, UserPlus, Edit3, X, Copy, Check, Users, HelpCircle, RotateCcw, RotateCw } from 'lucide-react';
 import BudgetRow from '@/components/BudgetRow';
-import AddTransactionDialog from '@/components/AddTransactionDialog';
 import PlanRightPanel from '@/components/PlanRightPanel';
 
 interface BudgetEntry {
@@ -37,10 +36,17 @@ export default function PlanPage() {
   const [data, setData] = useState<BudgetData | null>(null);
   const [month, setMonth] = useState('2026-04');
   const [collapsed, setCollapsed] = useState<Record<string, boolean>>({});
-  const [showTxDialog, setShowTxDialog] = useState(false);
   const [showMonthPicker, setShowMonthPicker] = useState(false);
   const monthPickerRef = useRef<HTMLDivElement>(null);
   const [filter, setFilter] = useState<FilterType>('all');
+
+  // Inline add category state
+  const [addingCategoryToGroup, setAddingCategoryToGroup] = useState<number | null>(null);
+  const [newCategoryName, setNewCategoryName] = useState('');
+
+  // Inline add group state
+  const [addingGroup, setAddingGroup] = useState(false);
+  const [newGroupName, setNewGroupName] = useState('');
 
   // Members modal state
   const [showMembers, setShowMembers] = useState(false);
@@ -52,8 +58,7 @@ export default function PlanPage() {
   const load = useCallback(async () => {
     try {
       const res = await fetch(`/api/budgets?month=${month}`);
-      const json = await res.json();
-      setData(json);
+      setData(await res.json());
     } catch (e) {
       console.error('Plan load failed:', e);
     }
@@ -81,6 +86,32 @@ export default function PlanPage() {
     load();
   }
 
+  async function handleAddCategory(groupId: number) {
+    const name = newCategoryName.trim();
+    setAddingCategoryToGroup(null);
+    setNewCategoryName('');
+    if (!name) return;
+    await fetch('/api/categories', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ group_id: groupId, name }),
+    });
+    load();
+  }
+
+  async function handleAddGroup() {
+    const name = newGroupName.trim();
+    setAddingGroup(false);
+    setNewGroupName('');
+    if (!name) return;
+    await fetch('/api/category-groups', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name }),
+    });
+    load();
+  }
+
   function getActiveVaultId(): number | null {
     const val = document.cookie.split('; ').find(c => c.startsWith('vault_id='))?.split('=')[1];
     return val ? parseInt(val, 10) : null;
@@ -102,8 +133,7 @@ export default function PlanPage() {
     setInviteLoading(true);
     try {
       const res = await fetch(`/api/vaults/${vaultId}/invite`, { method: 'POST' });
-      const data = await res.json();
-      setInviteLink(data.link);
+      setInviteLink((await res.json()).link);
     } finally {
       setInviteLoading(false);
     }
@@ -119,36 +149,33 @@ export default function PlanPage() {
 
   const { budgets, readyToAssign } = data;
 
-  // Group budgets
-  const groups: Record<string, { name: string; sort: number; rows: BudgetEntry[] }> = {};
+  const groups: Record<string, { name: string; sort: number; rows: BudgetEntry[]; id: number }> = {};
   for (const b of budgets) {
     const key = String(b.group_id);
-    if (!groups[key]) groups[key] = { name: b.group_name, sort: b.group_sort, rows: [] };
+    if (!groups[key]) groups[key] = { name: b.group_name, sort: b.group_sort, rows: [], id: b.group_id };
     groups[key].rows.push(b);
   }
   const sortedGroups = Object.entries(groups).sort((a, b) => a[1].sort - b[1].sort);
-
   const overspentCount = budgets.filter(b => b.available < 0).length;
 
   const [y, m] = month.split('-').map(Number);
   const monthLabel = `${tMonthShort(m - 1)} ${y}`;
 
   function changeMonth(delta: number) {
-    let nm = m + delta;
-    let ny = y;
+    let nm = m + delta, ny = y;
     if (nm > 12) { nm = 1; ny++; }
-    if (nm < 1) { nm = 12; ny--; }
+    if (nm < 1)  { nm = 12; ny--; }
     setMonth(`${ny}-${String(nm).padStart(2, '0')}`);
     setShowMonthPicker(false);
   }
 
   function filterRows(rows: BudgetEntry[]): BudgetEntry[] {
     switch (filter) {
-      case 'overspent': return rows.filter(r => r.available < 0);
-      case 'underfunded': return rows.filter(r => r.goal_amount && r.available < r.goal_amount);
-      case 'overfunded': return rows.filter(r => r.goal_amount && r.available > r.goal_amount);
-      case 'available': return rows.filter(r => r.available > 0 && !r.goal_amount);
-      default: return rows;
+      case 'overspent':   return rows.filter(r => r.available < 0);
+      case 'underfunded': return rows.filter(r => r.goal_amount != null && r.available < r.goal_amount);
+      case 'overfunded':  return rows.filter(r => r.goal_amount != null && r.available > r.goal_amount);
+      case 'available':   return rows.filter(r => r.available > 0 && !r.goal_amount);
+      default:            return rows;
     }
   }
 
@@ -177,27 +204,16 @@ export default function PlanPage() {
             </button>
             {showMonthPicker && (
               <div className="absolute top-full mt-1 left-0 bg-white shadow-lg rounded-lg p-3 z-50 w-48">
-                {/* Year row */}
                 <div className="flex items-center justify-between mb-2">
-                  <button
-                    onClick={() => setMonth(`${y - 1}-${String(m).padStart(2, '0')}`)}
-                    className="p-1 text-gray-500 hover:text-gray-900 hover:bg-gray-100 rounded"
-                  >‹</button>
+                  <button onClick={() => setMonth(`${y - 1}-${String(m).padStart(2, '0')}`)} className="p-1 text-gray-500 hover:text-gray-900 hover:bg-gray-100 rounded">‹</button>
                   <span className="text-sm font-semibold text-gray-800">{y}</span>
-                  <button
-                    onClick={() => setMonth(`${y + 1}-${String(m).padStart(2, '0')}`)}
-                    className="p-1 text-gray-500 hover:text-gray-900 hover:bg-gray-100 rounded"
-                  >›</button>
+                  <button onClick={() => setMonth(`${y + 1}-${String(m).padStart(2, '0')}`)} className="p-1 text-gray-500 hover:text-gray-900 hover:bg-gray-100 rounded">›</button>
                 </div>
-                {/* Month grid */}
                 <div className="grid grid-cols-4 gap-1">
                   {Array.from({ length: 12 }, (_, i) => (
                     <button
                       key={i}
-                      onClick={() => {
-                        setMonth(`${y}-${String(i + 1).padStart(2, '0')}`);
-                        setShowMonthPicker(false);
-                      }}
+                      onClick={() => { setMonth(`${y}-${String(i + 1).padStart(2, '0')}`); setShowMonthPicker(false); }}
                       className={`py-1.5 rounded text-xs ${i + 1 === m ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}
                     >
                       {tMonthShort(i)}
@@ -228,7 +244,8 @@ export default function PlanPage() {
           </div>
           <button
             onClick={openMembers}
-            className="flex items-center gap-1 text-white/80 hover:text-white text-sm border border-white/30 rounded-lg px-3 py-2">
+            className="flex items-center gap-1 text-white/80 hover:text-white text-sm border border-white/30 rounded-lg px-3 py-2"
+          >
             <UserPlus size={14} /> {t('plan_add_member')}
           </button>
         </div>
@@ -237,11 +254,11 @@ export default function PlanPage() {
       {/* Filter pills */}
       <div className="flex items-center gap-2 px-6 py-2 bg-gray-100 border-b shrink-0 overflow-x-auto">
         {([
-          ['all', t('plan_filter_all')] as const,
-          ['overspent', overspentCount > 0 ? t('plan_filter_overspent_count', { count: String(overspentCount) }) : t('plan_filter_overspent')] as const,
+          ['all',         t('plan_filter_all')] as const,
+          ['overspent',   overspentCount > 0 ? t('plan_filter_overspent_count', { count: String(overspentCount) }) : t('plan_filter_overspent')] as const,
           ['underfunded', t('plan_filter_underfunded')] as const,
-          ['overfunded', t('plan_filter_overfunded')] as const,
-          ['available', t('plan_filter_available')] as const,
+          ['overfunded',  t('plan_filter_overfunded')] as const,
+          ['available',   t('plan_filter_available')] as const,
         ]).map(([key, label]) => (
           <button
             key={key}
@@ -274,10 +291,10 @@ export default function PlanPage() {
             <button className="p-1 text-gray-400 hover:text-gray-700"><RotateCcw size={14} /></button>
             <button className="p-1 text-gray-400 hover:text-gray-700"><RotateCw size={14} /></button>
             <button
-              onClick={() => setShowTxDialog(true)}
+              onClick={() => { setAddingGroup(true); setNewGroupName(''); }}
               className="ml-auto flex items-center gap-1 bg-blue-600 text-white text-sm rounded-lg px-3 py-1.5 hover:bg-blue-700"
             >
-              <Plus size={14} /> {t('plan_add_transaction')}
+              <Plus size={14} /> {t('plan_add_group')}
             </button>
           </div>
 
@@ -299,11 +316,13 @@ export default function PlanPage() {
                 const filtered = filterRows(group.rows);
                 if (filter !== 'all' && filtered.length === 0) return null;
                 const groupAvail = group.rows.reduce((s, r) => s + r.available, 0);
+                const isAddingHere = addingCategoryToGroup === group.id;
+
                 return (
                   <React.Fragment key={key}>
                     {/* Group header row */}
                     <tr
-                      className="bg-gray-50 border-y border-gray-200 cursor-pointer hover:bg-gray-100"
+                      className="bg-gray-50 border-y border-gray-200 cursor-pointer hover:bg-gray-100 group/grouprow"
                       onClick={() => setCollapsed(c => ({ ...c, [key]: !c[key] }))}
                     >
                       <td className="w-8 px-3 py-2">
@@ -313,10 +332,24 @@ export default function PlanPage() {
                         }
                       </td>
                       <td className="px-3 py-2 text-xs font-semibold uppercase tracking-wide text-gray-600">
-                        {group.name}
+                        <div className="flex items-center gap-2">
+                          {group.name}
+                          <button
+                            onClick={e => {
+                              e.stopPropagation();
+                              setCollapsed(c => ({ ...c, [key]: false }));
+                              setAddingCategoryToGroup(group.id);
+                              setNewCategoryName('');
+                            }}
+                            className="opacity-0 group-hover/grouprow:opacity-100 p-0.5 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded transition-opacity"
+                            title={t('plan_add_category')}
+                          >
+                            <Plus size={13} />
+                          </button>
+                        </div>
                       </td>
-                      <td className="px-3 py-2"></td>
-                      <td className="px-3 py-2"></td>
+                      <td className="px-3 py-2" />
+                      <td className="px-3 py-2" />
                       <td className="px-3 py-2 text-right">
                         <span className="text-xs font-medium text-gray-500">
                           {groupAvail !== 0 ? fmt(groupAvail) : ''}
@@ -340,29 +373,76 @@ export default function PlanPage() {
                         onAssignChange={handleAssignChange}
                       />
                     ))}
+
+                    {/* Inline new-category row */}
+                    {isAddingHere && (
+                      <tr className="border-b border-blue-100 bg-blue-50">
+                        <td className="w-8 px-3 py-1.5" />
+                        <td className="px-3 py-1.5" colSpan={4}>
+                          <input
+                            autoFocus
+                            className="w-full max-w-xs text-sm outline-none bg-transparent border-b border-blue-400 px-1 py-0.5 placeholder-blue-300"
+                            placeholder={t('plan_new_category_placeholder')}
+                            value={newCategoryName}
+                            onChange={e => setNewCategoryName(e.target.value)}
+                            onKeyDown={e => {
+                              if (e.key === 'Enter') { e.preventDefault(); handleAddCategory(group.id); }
+                              if (e.key === 'Escape') { setAddingCategoryToGroup(null); setNewCategoryName(''); }
+                            }}
+                            onBlur={() => handleAddCategory(group.id)}
+                          />
+                        </td>
+                      </tr>
+                    )}
                   </React.Fragment>
                 );
               })}
+
+              {/* Inline new-group row */}
+              {addingGroup && (
+                <tr className="border-b border-blue-100 bg-blue-50">
+                  <td className="w-8 px-3 py-2" />
+                  <td className="px-3 py-2" colSpan={4}>
+                    <input
+                      autoFocus
+                      className="w-full max-w-xs text-sm font-semibold uppercase tracking-wide outline-none bg-transparent border-b border-blue-400 px-1 py-0.5 placeholder-blue-300"
+                      placeholder={t('plan_new_group_placeholder')}
+                      value={newGroupName}
+                      onChange={e => setNewGroupName(e.target.value)}
+                      onKeyDown={e => {
+                        if (e.key === 'Enter') { e.preventDefault(); handleAddGroup(); }
+                        if (e.key === 'Escape') { setAddingGroup(false); setNewGroupName(''); }
+                      }}
+                      onBlur={() => handleAddGroup()}
+                    />
+                  </td>
+                </tr>
+              )}
             </tbody>
           </table>
+
+          {/* Add group link at bottom */}
+          {!addingGroup && (
+            <div className="px-6 py-3">
+              <button
+                onClick={() => { setAddingGroup(true); setNewGroupName(''); }}
+                className="flex items-center gap-1.5 text-sm text-gray-400 hover:text-blue-600"
+              >
+                <Plus size={14} /> {t('plan_add_group')}
+              </button>
+            </div>
+          )}
         </div>
 
         {/* Right panel */}
         <PlanRightPanel month={month} budgets={budgets} readyToAssign={readyToAssign} />
       </div>
 
-      <AddTransactionDialog
-        open={showTxDialog}
-        onClose={() => setShowTxDialog(false)}
-        onSaved={load}
-      />
-
       {/* Members Modal */}
       {showMembers && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
           <div className="absolute inset-0 bg-black/40" onClick={() => setShowMembers(false)} />
           <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-md flex flex-col max-h-[80vh]">
-            {/* Header */}
             <div className="flex items-center justify-between px-5 py-4 border-b border-gray-200">
               <div className="flex items-center gap-2">
                 <Users size={16} className="text-blue-600" />
@@ -372,36 +452,28 @@ export default function PlanPage() {
                 <X size={18} />
               </button>
             </div>
-
-            {/* Member list */}
             <div className="flex-1 overflow-y-auto px-5 py-3 space-y-2">
-              {members.map(m => (
-                <div key={m.id} className="flex items-center gap-3 py-2">
+              {members.map(mem => (
+                <div key={mem.id} className="flex items-center gap-3 py-2">
                   <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-700 text-xs font-bold shrink-0">
-                    {m.name.split(' ').map((w: string) => w[0]).join('').toUpperCase().slice(0, 2)}
+                    {mem.name.split(' ').map((w: string) => w[0]).join('').toUpperCase().slice(0, 2)}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <div className="text-sm font-medium text-gray-900 truncate">{m.name}</div>
-                    <div className="text-xs text-gray-500 truncate">{m.email}</div>
+                    <div className="text-sm font-medium text-gray-900 truncate">{mem.name}</div>
+                    <div className="text-xs text-gray-500 truncate">{mem.email}</div>
                   </div>
-                  <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${m.role === 'owner' ? 'bg-blue-100 text-blue-700' : 'bg-gray-100 text-gray-600'}`}>
-                    {m.role === 'owner' ? t('vault_member_role_owner') : t('vault_member_role_member')}
+                  <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${mem.role === 'owner' ? 'bg-blue-100 text-blue-700' : 'bg-gray-100 text-gray-600'}`}>
+                    {mem.role === 'owner' ? t('vault_member_role_owner') : t('vault_member_role_member')}
                   </span>
                 </div>
               ))}
             </div>
-
-            {/* Invite section */}
             <div className="px-5 py-4 border-t border-gray-200 space-y-3">
               {inviteLink ? (
                 <div>
                   <p className="text-xs text-gray-500 mb-2">{t('vault_invite_link_label')}</p>
                   <div className="flex gap-2">
-                    <input
-                      readOnly
-                      value={inviteLink}
-                      className="flex-1 text-xs border border-gray-200 rounded-lg px-3 py-2 bg-gray-50 text-gray-700 outline-none"
-                    />
+                    <input readOnly value={inviteLink} className="flex-1 text-xs border border-gray-200 rounded-lg px-3 py-2 bg-gray-50 text-gray-700 outline-none" />
                     <button
                       onClick={copyInvite}
                       className={`flex items-center gap-1.5 px-3 py-2 text-xs font-medium rounded-lg transition-colors ${inviteCopied ? 'bg-green-500 text-white' : 'bg-blue-600 text-white hover:bg-blue-700'}`}
@@ -427,5 +499,3 @@ export default function PlanPage() {
     </div>
   );
 }
-
-import React from 'react';
