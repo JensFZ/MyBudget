@@ -8,6 +8,8 @@ services:
     restart: unless-stopped
     environment:
       - NODE_ENV=production
+      # Public URL used for vault invite links – set to your domain or IP
+      - APP_URL=http://localhost:3000
 
 volumes:
   budget_data:

@@ -25,6 +25,6 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     'INSERT INTO vault_invites (vault_id, invited_by, token, expires_at) VALUES (?, ?, ?, ?)'
   ).run(vaultId, userId, token, expiresAt);
 
-  const origin = req.headers.get('origin') ?? `http://localhost:3000`;
+  const origin = req.headers.get('origin') ?? process.env.APP_URL ?? `http://localhost:3000`;
   return NextResponse.json({ token, link: `${origin}/join?token=${token}` });
 }
