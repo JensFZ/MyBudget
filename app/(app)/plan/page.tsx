@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { fmt } from '@/lib/format';
 import { useI18n } from '@/lib/i18n';
 import { ChevronDown, ChevronRight, Plus, UserPlus, Edit3, X, Copy, Check, Users, HelpCircle, RotateCcw, RotateCw } from 'lucide-react';
@@ -39,6 +39,7 @@ export default function PlanPage() {
   const [collapsed, setCollapsed] = useState<Record<string, boolean>>({});
   const [showTxDialog, setShowTxDialog] = useState(false);
   const [showMonthPicker, setShowMonthPicker] = useState(false);
+  const monthPickerRef = useRef<HTMLDivElement>(null);
   const [filter, setFilter] = useState<FilterType>('all');
 
   // Members modal state
@@ -59,6 +60,17 @@ export default function PlanPage() {
   }, [month]);
 
   useEffect(() => { load(); }, [load]);
+
+  useEffect(() => {
+    if (!showMonthPicker) return;
+    function handleClick(e: MouseEvent) {
+      if (monthPickerRef.current && !monthPickerRef.current.contains(e.target as Node)) {
+        setShowMonthPicker(false);
+      }
+    }
+    document.addEventListener('mousedown', handleClick);
+    return () => document.removeEventListener('mousedown', handleClick);
+  }, [showMonthPicker]);
 
   async function handleAssignChange(categoryId: number, month: string, value: number) {
     await fetch('/api/budgets', {
@@ -156,7 +168,7 @@ export default function PlanPage() {
           >
             {t('plan_heute')}
           </button>
-          <div className="relative">
+          <div className="relative" ref={monthPickerRef}>
             <button
               onClick={() => setShowMonthPicker(v => !v)}
               className="flex items-center gap-1 text-white font-semibold px-2 py-1 rounded hover:bg-white/10"
@@ -164,19 +176,34 @@ export default function PlanPage() {
               {monthLabel} <ChevronDown size={14} />
             </button>
             {showMonthPicker && (
-              <div className="absolute top-full mt-1 left-0 bg-white shadow-lg rounded-lg p-3 z-50 grid grid-cols-4 gap-1 w-48">
-                {Array.from({ length: 12 }, (_, i) => (
+              <div className="absolute top-full mt-1 left-0 bg-white shadow-lg rounded-lg p-3 z-50 w-48">
+                {/* Year row */}
+                <div className="flex items-center justify-between mb-2">
                   <button
-                    key={i}
-                    onClick={() => {
-                      setMonth(`${y}-${String(i + 1).padStart(2, '0')}`);
-                      setShowMonthPicker(false);
-                    }}
-                    className={`py-1.5 rounded text-xs ${i + 1 === m ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}
-                  >
-                    {tMonthShort(i)}
-                  </button>
-                ))}
+                    onClick={() => setMonth(`${y - 1}-${String(m).padStart(2, '0')}`)}
+                    className="p-1 text-gray-500 hover:text-gray-900 hover:bg-gray-100 rounded"
+                  >‹</button>
+                  <span className="text-sm font-semibold text-gray-800">{y}</span>
+                  <button
+                    onClick={() => setMonth(`${y + 1}-${String(m).padStart(2, '0')}`)}
+                    className="p-1 text-gray-500 hover:text-gray-900 hover:bg-gray-100 rounded"
+                  >›</button>
+                </div>
+                {/* Month grid */}
+                <div className="grid grid-cols-4 gap-1">
+                  {Array.from({ length: 12 }, (_, i) => (
+                    <button
+                      key={i}
+                      onClick={() => {
+                        setMonth(`${y}-${String(i + 1).padStart(2, '0')}`);
+                        setShowMonthPicker(false);
+                      }}
+                      className={`py-1.5 rounded text-xs ${i + 1 === m ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}
+                    >
+                      {tMonthShort(i)}
+                    </button>
+                  ))}
+                </div>
               </div>
             )}
           </div>
