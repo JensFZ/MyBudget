@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { fmt } from '@/lib/format';
 import { useI18n } from '@/lib/i18n';
-import { ChevronDown, ChevronRight, Plus, UserPlus, Edit3, X, Copy, Check, Users, HelpCircle, RotateCcw, RotateCw } from 'lucide-react';
+import { ChevronDown, ChevronRight, Plus, UserPlus, X, Copy, Check, Users, HelpCircle, RotateCcw, RotateCw } from 'lucide-react';
 import BudgetRow from '@/components/BudgetRow';
 import PlanRightPanel from '@/components/PlanRightPanel';
 
@@ -207,7 +207,10 @@ export default function PlanPage() {
         style={{ backgroundColor: readyToAssign < 0 ? 'var(--overspent-red)' : 'var(--ready-green)' }}
       >
         {/* Month navigation */}
-        <div className="flex items-center gap-1">
+        <div
+          className="flex items-center gap-1 px-2 py-1.5 rounded-lg"
+          style={{ backgroundColor: readyToAssign < 0 ? '#dc2626' : '#16a34a' }}
+        >
           <button onClick={() => changeMonth(-1)} className="p-1 text-white/80 hover:text-white">‹</button>
           <button
             onClick={() => setMonth(new Date().toISOString().slice(0, 7))}
@@ -245,10 +248,6 @@ export default function PlanPage() {
           </div>
           <button onClick={() => changeMonth(1)} className="p-1 text-white/80 hover:text-white">›</button>
         </div>
-
-        <button className="text-white/80 hover:text-white">
-          <Edit3 size={16} />
-        </button>
 
         {/* Ready to assign */}
         <div className="flex items-center gap-2 ml-auto">
