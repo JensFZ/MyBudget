@@ -102,6 +102,7 @@ const t: TranslationSet = {
   panel_back_to_summary: 'Back to month summary',
   panel_goal: 'Goal',
   panel_goal_target: 'Target amount',
+  panel_goal_set: 'Set target amount',
   panel_goal_funded: 'Goal reached',
   panel_goal_remaining: '{amount} still needed',
   panel_history: 'History',
@@ -159,6 +160,15 @@ const t: TranslationSet = {
   account_type_credit: 'Credit Card',
   account_type_tracking: 'Tracking',
   account_type_closed: 'Closed',
+  account_danger_zone: 'Danger Zone',
+  account_archive: 'Archive account',
+  account_unarchive: 'Reactivate account',
+  account_delete: 'Delete account',
+  account_delete_confirm_title: 'Really delete account?',
+  account_delete_confirm_body: 'This account has {count} transactions. Deleting it will permanently remove all transactions and affect category balances.',
+  account_delete_confirm_no_tx: 'This account has no transactions and can be safely deleted.',
+  account_delete_confirm_action: 'Delete permanently',
+  sidebar_account_group_archived: 'Archived',
 
   // Add Account Dialog
   add_account_title: 'Add Account',

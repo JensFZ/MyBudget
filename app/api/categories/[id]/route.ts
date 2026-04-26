@@ -20,8 +20,10 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
   const fields: string[] = [];
   const values: unknown[] = [];
 
-  if ('color' in body) { fields.push('color = ?'); values.push(body.color ?? null); }
-  if ('name' in body)  { fields.push('name = ?');  values.push(String(body.name).trim()); }
+  if ('color' in body)       { fields.push('color = ?');       values.push(body.color ?? null); }
+  if ('name' in body)        { fields.push('name = ?');        values.push(String(body.name).trim()); }
+  if ('goal_amount' in body) { fields.push('goal_amount = ?'); values.push(body.goal_amount == null ? null : Number(body.goal_amount)); }
+  if ('goal_type' in body)   { fields.push('goal_type = ?');   values.push(body.goal_type ?? null); }
 
   if (fields.length === 0) return NextResponse.json({ error: 'Nothing to update' }, { status: 400 });
 

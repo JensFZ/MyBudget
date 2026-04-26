@@ -97,6 +97,15 @@ export default function PlanPage() {
     load();
   }
 
+  async function handleGoalChange(categoryId: number, goalAmount: number | null) {
+    await fetch(`/api/categories/${categoryId}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ goal_amount: goalAmount }),
+    });
+    load();
+  }
+
   async function handleAddCategory(groupId: number) {
     const name = newCategoryName.trim();
     setAddingCategoryToGroup(null);
@@ -457,6 +466,7 @@ export default function PlanPage() {
           onDeselect={() => setSelectedCategoryId(null)}
           onAssignChange={handleAssignChange}
           onColorChange={handleColorChange}
+          onGoalChange={handleGoalChange}
         />
       </div>
 

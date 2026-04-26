@@ -1,6 +1,6 @@
 'use client';
 
-import { fmt } from '@/lib/format';
+import { fmt, fmt2, evalAmount } from '@/lib/format';
 import { useI18n } from '@/lib/i18n';
 import { ChevronDown, ChevronUp, Zap, Loader2, ArrowLeft, Target, TrendingDown } from 'lucide-react';
 import { useEffect, useState, useCallback } from 'react';
@@ -37,6 +37,7 @@ interface Props {
   onDeselect: () => void;
   onAssignChange: (categoryId: number, month: string, value: number) => void;
   onColorChange: (categoryId: number, color: string | null) => void;
+  onGoalChange: (categoryId: number, goalAmount: number | null) => void;
 }
 
 function shiftMonth(month: string, delta: number): string {
@@ -52,7 +53,7 @@ function sumStats(budgets: BudgetEntry[]): MonthStats {
   };
 }
 
-export default function PlanRightPanel({ month, budgets, readyToAssign, selectedCategory, onDeselect, onAssignChange, onColorChange }: Props) {
+export default function PlanRightPanel({ month, budgets, readyToAssign, selectedCategory, onDeselect, onAssignChange, onColorChange, onGoalChange }: Props) {
   const { t, tMonthLong } = useI18n();
   const [, mm] = month.split('-');
   const monthName = tMonthLong(Number(mm) - 1);
@@ -111,12 +112,26 @@ export default function PlanRightPanel({ month, budgets, readyToAssign, selected
   }
 
   const [autoAssignOpen, setAutoAssignOpen] = useState(false);
+  const [goalInput, setGoalInput] = useState('');
 
   const assign = useCallback((value: number) => {
     if (!selectedCategory) return;
     onAssignChange(selectedCategory.category_id, month, Math.max(0, Math.round(value * 100) / 100));
     setAutoAssignOpen(false);
   }, [selectedCategory, month, onAssignChange]);
+
+  useEffect(() => {
+    setGoalInput(selectedCategory?.goal_amount != null ? fmt2(selectedCategory.goal_amount) : '');
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedCategory?.category_id]);
+
+  function commitGoal() {
+    if (!selectedCategory) return;
+    const parsed = goalInput.trim() ? evalAmount(goalInput) : 0;
+    const newGoal = parsed > 0 ? Math.round(parsed * 100) / 100 : null;
+    setGoalInput(newGoal != null ? fmt2(newGoal) : '');
+    if (newGoal !== selectedCategory.goal_amount) onGoalChange(selectedCategory.category_id, newGoal);
+  }
 
   // ── Category detail panel ──────────────────────────────────────────────────
   if (selectedCategory) {
@@ -192,29 +207,42 @@ export default function PlanRightPanel({ month, budgets, readyToAssign, selected
             </div>
           </div>
 
-          {/* Goal info */}
-          {cat.goal_amount != null && (
-            <div className="border rounded-xl p-3 mb-4 text-sm">
-              <div className="flex items-center gap-1.5 text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">
-                <Target size={12} /> {t('panel_goal')}
-              </div>
-              <div className="flex justify-between mb-1">
-                <span className="text-gray-500">{t('panel_goal_target')}</span>
-                <span className="font-medium tabular-nums">{fmt(cat.goal_amount)}</span>
-              </div>
-              {/* Progress bar */}
-              <div className="w-full bg-gray-100 rounded-full h-1.5 mt-2">
-                <div
-                  className={`h-1.5 rounded-full transition-all ${funded ? 'bg-green-500' : overspent ? 'bg-red-500' : 'bg-blue-500'}`}
-                  style={{ width: `${Math.min(100, Math.max(0, (cat.available / cat.goal_amount) * 100))}%` }}
+          {/* Goal block */}
+          <div className="border rounded-xl p-3 mb-4 text-sm">
+            <div className="flex items-center gap-1.5 text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">
+              <Target size={12} /> {t('panel_goal')}
+            </div>
+            <div className="flex items-center justify-between gap-2">
+              <span className="text-gray-500 shrink-0">{t('panel_goal_target')}</span>
+              <div className="flex items-center gap-1">
+                <span className="text-xs text-gray-400">€</span>
+                <input
+                  type="text"
+                  inputMode="decimal"
+                  className="w-24 text-right text-sm border border-gray-200 rounded-lg px-2 py-0.5 outline-none focus:border-blue-400 focus:ring-1 focus:ring-blue-100 tabular-nums"
+                  placeholder="—"
+                  value={goalInput}
+                  onChange={e => setGoalInput(e.target.value)}
+                  onBlur={commitGoal}
+                  onKeyDown={e => { if (e.key === 'Enter') { e.currentTarget.blur(); } }}
                 />
               </div>
-              <div className="flex justify-between text-xs text-gray-400 mt-1">
-                <span>{funded ? t('panel_goal_funded') : t('panel_goal_remaining', { amount: fmt(Math.max(0, cat.goal_amount - cat.available)) })}</span>
-                <span>{Math.round(Math.min(100, Math.max(0, (cat.available / cat.goal_amount) * 100)))}%</span>
-              </div>
             </div>
-          )}
+            {cat.goal_amount != null && (
+              <>
+                <div className="w-full bg-gray-100 rounded-full h-1.5 mt-3">
+                  <div
+                    className={`h-1.5 rounded-full transition-all ${funded ? 'bg-green-500' : overspent ? 'bg-red-500' : 'bg-blue-500'}`}
+                    style={{ width: `${Math.min(100, Math.max(0, (cat.available / cat.goal_amount) * 100))}%` }}
+                  />
+                </div>
+                <div className="flex justify-between text-xs text-gray-400 mt-1">
+                  <span>{funded ? t('panel_goal_funded') : t('panel_goal_remaining', { amount: fmt(Math.max(0, cat.goal_amount - cat.available)) })}</span>
+                  <span>{Math.round(Math.min(100, Math.max(0, (cat.available / cat.goal_amount) * 100)))}%</span>
+                </div>
+              </>
+            )}
+          </div>
 
           {/* Auto-Assign */}
           <div className="border-t pt-4 mb-4">

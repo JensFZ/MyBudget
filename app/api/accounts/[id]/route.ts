@@ -30,14 +30,15 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
   if (!account) return NextResponse.json({ error: 'Not found' }, { status: 404 });
 
   const body = await req.json();
-  const { name, type, on_budget, starred } = body;
+  const { name, type, on_budget, starred, archived } = body;
 
   const fields: string[] = [];
   const values: (string | number)[] = [];
-  if (name !== undefined) { fields.push('name = ?'); values.push(name); }
-  if (type !== undefined) { fields.push('type = ?'); values.push(type); }
-  if (on_budget !== undefined) { fields.push('on_budget = ?'); values.push(on_budget); }
-  if (starred !== undefined) { fields.push('starred = ?'); values.push(starred); }
+  if (name !== undefined)     { fields.push('name = ?');     values.push(name); }
+  if (type !== undefined)     { fields.push('type = ?');     values.push(type); }
+  if (on_budget !== undefined){ fields.push('on_budget = ?'); values.push(on_budget); }
+  if (starred !== undefined)  { fields.push('starred = ?');  values.push(starred); }
+  if (archived !== undefined) { fields.push('archived = ?'); values.push(archived); }
 
   if (fields.length === 0) return NextResponse.json({ error: 'No fields' }, { status: 400 });
 
@@ -47,4 +48,22 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
   ).get(...values);
 
   return NextResponse.json(result);
+}
+
+export async function DELETE(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const ctx = await resolveVault(req);
+  if (!ctx) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+
+  const { id } = await params;
+  const account = db.prepare('SELECT id FROM accounts WHERE id = ? AND vault_id = ?').get(Number(id), ctx.vaultId);
+  if (!account) return NextResponse.json({ error: 'Not found' }, { status: 404 });
+
+  // Nullify transfer references in other accounts' transactions pointing here
+  db.prepare('UPDATE transactions SET transfer_account_id = NULL WHERE transfer_account_id = ?').run(Number(id));
+  // Delete all transactions belonging to this account
+  db.prepare('DELETE FROM transactions WHERE account_id = ?').run(Number(id));
+  // Delete the account
+  db.prepare('DELETE FROM accounts WHERE id = ?').run(Number(id));
+
+  return NextResponse.json({ ok: true });
 }

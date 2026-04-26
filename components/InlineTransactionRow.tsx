@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect, KeyboardEvent } from 'react';
 import { Check, X, Trash2 } from 'lucide-react';
 import { useI18n } from '@/lib/i18n';
+import { fmt2, evalAmount } from '@/lib/format';
 
 export interface Account {
   id: number;
@@ -59,22 +60,6 @@ interface Props {
 
 const today = new Date().toISOString().slice(0, 10);
 
-/** Evaluates chained expressions like "1,50+8+8+8" or "100-5,20+3" */
-function evalAmount(expr: string): number {
-  const s = expr.trim().replace(/,/g, '.');
-  // Split before each + or - (keeping the sign with the number)
-  const tokens = s.split(/(?=[+\-])/);
-  let result = 0;
-  for (const token of tokens) {
-    const num = parseFloat(token);
-    if (!isNaN(num)) result += num;
-  }
-  return result;
-}
-
-function fmt2(n: number): string {
-  return Math.abs(n).toFixed(2).replace('.', ',');
-}
 
 function parseCategoryValue(val: string): { category_id: number | null; transfer_account_id: number | null } {
   if (val.startsWith('t:')) return { category_id: null, transfer_account_id: Number(val.slice(2)) };

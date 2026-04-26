@@ -2,9 +2,10 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { use } from 'react';
+import { useRouter } from 'next/navigation';
 import { fmt } from '@/lib/format';
 import { useI18n } from '@/lib/i18n';
-import { Plus, FileUp, RotateCcw, RotateCw, Search, Star, Edit2, X, Check } from 'lucide-react';
+import { Plus, FileUp, RotateCcw, RotateCw, Search, Star, Edit2, X, Check, Archive, ArchiveRestore, Trash2 } from 'lucide-react';
 import TransactionTable from '@/components/TransactionTable';
 import ImportDialog from '@/components/ImportDialog';
 import type { Account, Category, CategoryGroup, SaveData } from '@/components/InlineTransactionRow';
@@ -18,6 +19,7 @@ interface AccountDetail {
   balance: number;
   on_budget: number;
   starred: number;
+  archived: number;
   clearedBalance: number;
   unclearedBalance: number;
 }
@@ -41,6 +43,7 @@ interface Transaction {
 export default function AccountPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
   const { t } = useI18n();
+  const router = useRouter();
   const [account, setAccount] = useState<AccountDetail | null>(null);
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [accounts, setAccounts] = useState<Account[]>([]);
@@ -55,6 +58,7 @@ export default function AccountPage({ params }: { params: Promise<{ id: string }
   const [editAccountName, setEditAccountName] = useState('');
   const [editAccountType, setEditAccountType] = useState('');
   const [editAccountBalance, setEditAccountBalance] = useState('');
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
   const needsCategoryCount = transactions.filter(tx => !tx.category_id && tx.amount < 0 && !tx.transfer_account_id).length;
 
@@ -176,6 +180,25 @@ export default function AccountPage({ params }: { params: Promise<{ id: string }
     loadAccount();
     loadTransactions();
     window.dispatchEvent(new CustomEvent('accounts-updated'));
+  }
+
+  async function handleToggleArchived() {
+    if (!account) return;
+    const newVal = account.archived ? 0 : 1;
+    await fetch(`/api/accounts/${id}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ archived: newVal }),
+    });
+    setAccount({ ...account, archived: newVal });
+    setShowEditAccount(false);
+    window.dispatchEvent(new CustomEvent('accounts-updated'));
+  }
+
+  async function handleDeleteAccount() {
+    await fetch(`/api/accounts/${id}`, { method: 'DELETE' });
+    window.dispatchEvent(new CustomEvent('accounts-updated'));
+    router.replace('/accounts');
   }
 
   async function handleToggleStarred() {
@@ -438,12 +461,69 @@ export default function AccountPage({ params }: { params: Promise<{ id: string }
                 <p className="text-xs text-gray-400 mt-1">{t('account_edit_balance_hint')}</p>
               </div>
             </div>
-            <div className="flex justify-end gap-2 mt-6">
+            {/* Danger zone */}
+            <div className="border-t border-gray-100 pt-4 mt-2 space-y-2">
+              <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide">{t('account_danger_zone')}</p>
+              <button
+                onClick={handleToggleArchived}
+                className="flex items-center gap-2 w-full px-3 py-2 text-sm rounded-lg border border-gray-200 text-gray-600 hover:bg-gray-50"
+              >
+                {account.archived
+                  ? <><ArchiveRestore size={14} /> {t('account_unarchive')}</>
+                  : <><Archive size={14} /> {t('account_archive')}</>
+                }
+              </button>
+              <button
+                onClick={() => setShowDeleteConfirm(true)}
+                className="flex items-center gap-2 w-full px-3 py-2 text-sm rounded-lg border border-red-200 text-red-600 hover:bg-red-50"
+              >
+                <Trash2 size={14} /> {t('account_delete')}
+              </button>
+            </div>
+
+            <div className="flex justify-end gap-2 mt-4">
               <button onClick={() => setShowEditAccount(false)} className="px-4 py-2 text-sm text-gray-600 hover:text-gray-800 rounded-lg hover:bg-gray-100">
                 {t('settings_cancel')}
               </button>
               <button onClick={saveEditAccount} className="flex items-center gap-1.5 px-4 py-2 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium">
                 <Check size={14} /> {t('settings_save')}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Delete confirmation modal */}
+      {showDeleteConfirm && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-black/50" onClick={() => setShowDeleteConfirm(false)} />
+          <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-sm p-6">
+            <div className="flex items-start gap-3 mb-4">
+              <div className="w-9 h-9 rounded-full bg-red-100 flex items-center justify-center shrink-0">
+                <Trash2 size={16} className="text-red-600" />
+              </div>
+              <div>
+                <h3 className="text-base font-semibold text-gray-900">{t('account_delete_confirm_title')}</h3>
+                <p className="text-sm text-gray-500 mt-1">
+                  {transactions.length > 0
+                    ? t('account_delete_confirm_body', { count: String(transactions.length) })
+                    : t('account_delete_confirm_no_tx')
+                  }
+                </p>
+              </div>
+            </div>
+            <div className="flex justify-end gap-2">
+              <button
+                onClick={() => setShowDeleteConfirm(false)}
+                className="px-4 py-2 text-sm text-gray-600 hover:text-gray-800 rounded-lg hover:bg-gray-100"
+              >
+                {t('settings_cancel')}
+              </button>
+              <button
+                onClick={handleDeleteAccount}
+                className="flex items-center gap-1.5 px-4 py-2 text-sm bg-red-600 text-white rounded-lg hover:bg-red-700 font-medium"
+              >
+                <Trash2 size={14} /> {t('account_delete_confirm_action')}
               </button>
             </div>
           </div>

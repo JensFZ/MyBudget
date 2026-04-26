@@ -22,6 +22,7 @@ interface Account {
   balance: number;
   on_budget: number;
   starred: number;
+  archived: number;
 }
 
 export default function Sidebar() {
@@ -119,10 +120,12 @@ export default function Sidebar() {
 
   const byStarred = (a: Account, b: Account) => (b.starred ?? 0) - (a.starred ?? 0);
 
-  const cash = accounts.filter(a => a.type === 'cash' && a.on_budget === 1).sort(byStarred);
-  const credit = accounts.filter(a => a.type === 'credit' && a.on_budget === 1).sort(byStarred);
-  const tracking = accounts.filter(a => a.on_budget === 0 && a.type !== 'closed').sort(byStarred);
-  const closed = accounts.filter(a => a.type === 'closed').sort(byStarred);
+  const active = (a: Account) => !a.archived;
+  const cash     = accounts.filter(a => active(a) && a.type === 'cash'    && a.on_budget === 1).sort(byStarred);
+  const credit   = accounts.filter(a => active(a) && a.type === 'credit'  && a.on_budget === 1).sort(byStarred);
+  const tracking = accounts.filter(a => active(a) && a.on_budget === 0    && a.type !== 'closed').sort(byStarred);
+  const closed   = accounts.filter(a => active(a) && a.type === 'closed').sort(byStarred);
+  const archived = accounts.filter(a => a.archived === 1).sort(byStarred);
 
   function NavLink({ href, icon, label }: { href: string; icon: React.ReactNode; label: string }) {
     const active = pathname === href || pathname.startsWith(href + '/');
@@ -141,7 +144,7 @@ export default function Sidebar() {
     );
   }
 
-  function AccountGroup({ title, items }: { title: string; items: Account[] }) {
+  function AccountGroup({ title, items, muted }: { title: string; items: Account[]; muted?: boolean }) {
     const [open, setOpen] = useState(true);
     if (items.length === 0) return null;
     return (
@@ -150,7 +153,7 @@ export default function Sidebar() {
           onClick={() => setOpen(v => !v)}
           className="flex items-center justify-between w-full px-4 py-1"
         >
-          <span className="text-xs font-semibold uppercase tracking-wider text-slate-500">{title}</span>
+          <span className={`text-xs font-semibold uppercase tracking-wider ${muted ? 'text-slate-600' : 'text-slate-500'}`}>{title}</span>
           <ChevronDown size={12} className={`text-slate-500 transition-transform ${open ? '' : '-rotate-90'}`} />
         </button>
         {open && items.map(a => (
@@ -159,11 +162,11 @@ export default function Sidebar() {
             href={`/accounts/${a.id}`}
             className="flex items-center justify-between px-4 py-1.5 mx-2 rounded-md hover:bg-slate-800 group"
           >
-            <span className="text-sm text-slate-300 group-hover:text-white truncate flex items-center gap-1">
+            <span className={`text-sm truncate flex items-center gap-1 ${muted ? 'text-slate-500 group-hover:text-slate-300' : 'text-slate-300 group-hover:text-white'}`}>
               {a.starred ? <Star size={10} className="text-yellow-400 shrink-0" fill="currentColor" /> : null}
               {a.name}
             </span>
-            <span className={`text-xs font-medium ml-2 shrink-0 ${a.balance < 0 ? 'text-red-400' : 'text-slate-400'}`}>
+            <span className={`text-xs font-medium ml-2 shrink-0 ${a.balance < 0 ? 'text-red-400' : muted ? 'text-slate-600' : 'text-slate-400'}`}>
               {fmt(a.balance)}
             </span>
           </Link>
@@ -431,6 +434,7 @@ export default function Sidebar() {
           <AccountGroup title={t('sidebar_account_group_credit')} items={credit} />
           <AccountGroup title={t('sidebar_account_group_tracking')} items={tracking} />
           <AccountGroup title={t('sidebar_account_group_closed')} items={closed} />
+          <AccountGroup title={t('sidebar_account_group_archived')} items={archived} muted />
         </div>
 
         {/* Bottom actions */}

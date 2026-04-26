@@ -102,6 +102,7 @@ const t: TranslationSet = {
   panel_back_to_summary: 'Wróć do podsumowania miesiąca',
   panel_goal: 'Cel',
   panel_goal_target: 'Kwota docelowa',
+  panel_goal_set: 'Ustaw kwotę docelową',
   panel_goal_funded: 'Cel osiągnięty',
   panel_goal_remaining: 'Brakuje jeszcze {amount}',
   panel_history: 'Historia',
@@ -159,6 +160,15 @@ const t: TranslationSet = {
   account_type_credit: 'Karta kredytowa',
   account_type_tracking: 'Śledzenie',
   account_type_closed: 'Zamknięte',
+  account_danger_zone: 'Strefa niebezpieczna',
+  account_archive: 'Archiwizuj konto',
+  account_unarchive: 'Reaktywuj konto',
+  account_delete: 'Usuń konto',
+  account_delete_confirm_title: 'Naprawdę usunąć konto?',
+  account_delete_confirm_body: 'To konto ma {count} transakcji. Usunięcie trwale usunie wszystkie transakcje i wpłynie na salda kategorii.',
+  account_delete_confirm_no_tx: 'To konto nie ma transakcji i można je bezpiecznie usunąć.',
+  account_delete_confirm_action: 'Usuń trwale',
+  sidebar_account_group_archived: 'Zarchiwizowane',
 
   // Add Account Dialog
   add_account_title: 'Dodaj konto',
