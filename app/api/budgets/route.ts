@@ -26,6 +26,7 @@ export async function GET(req: NextRequest) {
       c.is_goal,
       c.goal_amount,
       c.goal_type,
+      c.goal_date,
       cg.name       AS group_name,
       cg.sort_order AS group_sort,
 

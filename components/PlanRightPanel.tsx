@@ -16,6 +16,7 @@ interface BudgetEntry {
   is_goal: number;
   goal_amount: number | null;
   goal_type: string | null;
+  goal_date: string | null;
 }
 
 const COLOR_PALETTE = [
@@ -38,6 +39,7 @@ interface Props {
   onAssignChange: (categoryId: number, month: string, value: number) => void;
   onColorChange: (categoryId: number, color: string | null) => void;
   onGoalChange: (categoryId: number, goalAmount: number | null) => void;
+  onGoalDateChange: (categoryId: number, goalDate: string | null) => void;
 }
 
 function shiftMonth(month: string, delta: number): string {
@@ -53,7 +55,7 @@ function sumStats(budgets: BudgetEntry[]): MonthStats {
   };
 }
 
-export default function PlanRightPanel({ month, budgets, readyToAssign, selectedCategory, onDeselect, onAssignChange, onColorChange, onGoalChange }: Props) {
+export default function PlanRightPanel({ month, budgets, readyToAssign, selectedCategory, onDeselect, onAssignChange, onColorChange, onGoalChange, onGoalDateChange }: Props) {
   const { t, tMonthLong } = useI18n();
   const [, mm] = month.split('-');
   const monthName = tMonthLong(Number(mm) - 1);
@@ -113,6 +115,7 @@ export default function PlanRightPanel({ month, budgets, readyToAssign, selected
 
   const [autoAssignOpen, setAutoAssignOpen] = useState(false);
   const [goalInput, setGoalInput] = useState('');
+  const [goalDateInput, setGoalDateInput] = useState('');
 
   const assign = useCallback((value: number) => {
     if (!selectedCategory) return;
@@ -122,6 +125,7 @@ export default function PlanRightPanel({ month, budgets, readyToAssign, selected
 
   useEffect(() => {
     setGoalInput(selectedCategory?.goal_amount != null ? fmt2(selectedCategory.goal_amount) : '');
+    setGoalDateInput(selectedCategory?.goal_date ?? '');
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedCategory?.category_id]);
 
@@ -131,6 +135,23 @@ export default function PlanRightPanel({ month, budgets, readyToAssign, selected
     const newGoal = parsed > 0 ? Math.round(parsed * 100) / 100 : null;
     setGoalInput(newGoal != null ? fmt2(newGoal) : '');
     if (newGoal !== selectedCategory.goal_amount) onGoalChange(selectedCategory.category_id, newGoal);
+  }
+
+  function commitGoalDate(value: string) {
+    if (!selectedCategory) return;
+    const newDate = value || null;
+    if (newDate !== selectedCategory.goal_date) onGoalDateChange(selectedCategory.category_id, newDate);
+  }
+
+  function monthlyNeeded(cat: typeof selectedCategory & object): number | null {
+    if (!cat || cat.goal_amount == null || !cat.goal_date) return null;
+    const remaining = Math.max(0, cat.goal_amount - cat.available);
+    if (remaining === 0) return 0;
+    const [gy, gm] = cat.goal_date.split('-').map(Number);
+    const [cy, cm] = month.split('-').map(Number);
+    const months = (gy - cy) * 12 + (gm - cm);
+    if (months <= 0) return remaining;
+    return Math.ceil((remaining / months) * 100) / 100;
   }
 
   // ── Category detail panel ──────────────────────────────────────────────────
@@ -212,7 +233,7 @@ export default function PlanRightPanel({ month, budgets, readyToAssign, selected
             <div className="flex items-center gap-1.5 text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">
               <Target size={12} /> {t('panel_goal')}
             </div>
-            <div className="flex items-center justify-between gap-2">
+            <div className="flex items-center justify-between gap-2 mb-2">
               <span className="text-gray-500 shrink-0">{t('panel_goal_target')}</span>
               <div className="flex items-center gap-1">
                 <span className="text-xs text-gray-400">€</span>
@@ -228,6 +249,27 @@ export default function PlanRightPanel({ month, budgets, readyToAssign, selected
                 />
               </div>
             </div>
+            <div className="flex items-center justify-between gap-2">
+              <span className="text-gray-500 shrink-0">{t('panel_goal_date')}</span>
+              <input
+                type="month"
+                className="text-sm border border-gray-200 rounded-lg px-2 py-0.5 outline-none focus:border-blue-400 focus:ring-1 focus:ring-blue-100 text-gray-700"
+                value={goalDateInput}
+                onChange={e => { setGoalDateInput(e.target.value); commitGoalDate(e.target.value); }}
+              />
+            </div>
+            {(() => {
+              const needed = monthlyNeeded(cat);
+              if (needed === null) return null;
+              return (
+                <div className="mt-2 flex items-center justify-between text-xs">
+                  <span className="text-gray-400">{t('panel_goal_monthly')}</span>
+                  <span className={`font-semibold tabular-nums ${needed === 0 ? 'text-green-600' : 'text-blue-600'}`}>
+                    {needed === 0 ? t('panel_goal_funded') : fmt(needed)}
+                  </span>
+                </div>
+              );
+            })()}
             {cat.goal_amount != null && (
               <>
                 <div className="w-full bg-gray-100 rounded-full h-1.5 mt-3">
@@ -391,13 +433,6 @@ export default function PlanRightPanel({ month, budgets, readyToAssign, selected
           </button>
 
           <div className="space-y-2.5 text-sm">
-            <div className="flex justify-between items-center">
-              <span className="text-gray-500">{t('panel_underfunded')}</span>
-              <span className={`font-medium tabular-nums ${underfunded > 0 ? 'text-orange-600' : 'text-gray-800'}`}>
-                {fmt(underfunded)}
-              </span>
-            </div>
-
             <div className="border-t border-gray-100 pt-2.5 space-y-2.5">
               <StatRow label={t('panel_assigned_last_month')} value={lastMonth?.assigned ?? null} loading={monthHistoryLoading} />
               <StatRow label={t('panel_spent_last_month')} value={lastMonth?.spent ?? null} red loading={monthHistoryLoading} />

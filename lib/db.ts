@@ -61,6 +61,7 @@ const migrations: string[] = [
   `CREATE UNIQUE INDEX IF NOT EXISTS idx_transactions_import_hash ON transactions(import_hash) WHERE import_hash IS NOT NULL`,
   `ALTER TABLE categories ADD COLUMN color TEXT`,
   `ALTER TABLE accounts ADD COLUMN archived INTEGER DEFAULT 0`,
+  `ALTER TABLE categories ADD COLUMN goal_date TEXT`,
 ];
 for (const sql of migrations) {
   try { db.exec(sql); } catch { /* already exists */ }

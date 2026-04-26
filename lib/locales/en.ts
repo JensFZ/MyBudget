@@ -103,6 +103,8 @@ const t: TranslationSet = {
   panel_goal: 'Goal',
   panel_goal_target: 'Target amount',
   panel_goal_set: 'Set target amount',
+  panel_goal_date: 'Target date',
+  panel_goal_monthly: 'Monthly needed',
   panel_goal_funded: 'Goal reached',
   panel_goal_remaining: '{amount} still needed',
   panel_history: 'History',

@@ -24,6 +24,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
   if ('name' in body)        { fields.push('name = ?');        values.push(String(body.name).trim()); }
   if ('goal_amount' in body) { fields.push('goal_amount = ?'); values.push(body.goal_amount == null ? null : Number(body.goal_amount)); }
   if ('goal_type' in body)   { fields.push('goal_type = ?');   values.push(body.goal_type ?? null); }
+  if ('goal_date' in body)   { fields.push('goal_date = ?');   values.push(body.goal_date ?? null); }
 
   if (fields.length === 0) return NextResponse.json({ error: 'Nothing to update' }, { status: 400 });
 

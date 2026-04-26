@@ -20,6 +20,7 @@ interface BudgetEntry {
   is_goal: number;
   goal_amount: number | null;
   goal_type: string | null;
+  goal_date: string | null;
 }
 
 interface BudgetData {
@@ -102,6 +103,15 @@ export default function PlanPage() {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ goal_amount: goalAmount }),
+    });
+    load();
+  }
+
+  async function handleGoalDateChange(categoryId: number, goalDate: string | null) {
+    await fetch(`/api/categories/${categoryId}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ goal_date: goalDate }),
     });
     load();
   }
@@ -466,6 +476,7 @@ export default function PlanPage() {
           onAssignChange={handleAssignChange}
           onColorChange={handleColorChange}
           onGoalChange={handleGoalChange}
+          onGoalDateChange={handleGoalDateChange}
         />
       </div>
 
