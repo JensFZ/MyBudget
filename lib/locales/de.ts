@@ -99,6 +99,12 @@ const t: TranslationSet = {
   panel_average_spent: 'Ø Ausgegeben (3 Monate)',
   panel_reduce_overfunding: 'Überfinanzierung reduzieren',
   panel_reset_available: 'Verfügbare Beträge zurücksetzen',
+  panel_back_to_summary: 'Zurück zur Monatsübersicht',
+  panel_goal: 'Ziel',
+  panel_goal_target: 'Zielbetrag',
+  panel_goal_funded: 'Ziel erreicht',
+  panel_goal_remaining: 'Noch {amount} fehlend',
+  panel_history: 'Verlauf',
 
   // Transaction table
   tx_col_account: 'Konto',
@@ -189,6 +195,27 @@ const t: TranslationSet = {
   acct_vehicle_desc: 'Auto oder Fahrzeugwert',
   acct_loan: 'Kredit',
   acct_loan_desc: 'Hypothek, Privatkredit oder Schulden',
+
+  // Filter bar
+  filter_all: 'Alle',
+  filter_uncleared: 'Ausstehend',
+  filter_needs_category: 'Ohne Kategorie',
+  filter_active: 'Aktiv ×',
+  filter_showing: '{count} Transaktionen gefiltert',
+  filter_clear: 'Filter aufheben',
+
+  // Import dialog
+  import_title: 'Transaktionen importieren',
+  import_account: 'Zielkonto',
+  import_drop_hint: 'CSV-Datei hier ablegen oder klicken',
+  import_formats_hint: 'Unterstützt: native CSV, 1822direkt CSV',
+  import_no_rows: 'Keine Transaktionen in der Datei gefunden.',
+  import_preview: '{count} Transaktionen erkannt (Format: {format}) – Vorschau (max. 50):',
+  import_preview_more: '… und {count} weitere',
+  import_confirm: '{count} Transaktionen importieren',
+  import_importing: 'Importiere…',
+  import_result: '{imported} importiert, {duplicates} Duplikate übersprungen (von {total} gesamt).',
+  import_choose_file: 'Datei auswählen',
 
   // Reflect page
   reflect_title: 'Überblick',

@@ -57,6 +57,9 @@ const migrations: string[] = [
   `ALTER TABLE accounts ADD COLUMN vault_id INTEGER REFERENCES vaults(id)`,
   `ALTER TABLE category_groups ADD COLUMN vault_id INTEGER REFERENCES vaults(id)`,
   `ALTER TABLE users ADD COLUMN avatar TEXT`,
+  `ALTER TABLE transactions ADD COLUMN import_hash TEXT`,
+  `CREATE UNIQUE INDEX IF NOT EXISTS idx_transactions_import_hash ON transactions(import_hash) WHERE import_hash IS NOT NULL`,
+  `ALTER TABLE categories ADD COLUMN color TEXT`,
 ];
 for (const sql of migrations) {
   try { db.exec(sql); } catch { /* already exists */ }

@@ -19,8 +19,9 @@ export async function GET(req: NextRequest) {
 
   const budgets = db.prepare(`
     SELECT
-      c.id   AS category_id,
-      c.name AS category_name,
+      c.id    AS category_id,
+      c.name  AS category_name,
+      c.color AS category_color,
       c.group_id,
       c.is_goal,
       c.goal_amount,

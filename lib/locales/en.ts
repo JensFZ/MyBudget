@@ -99,6 +99,12 @@ const t: TranslationSet = {
   panel_average_spent: 'Avg Spent (3 months)',
   panel_reduce_overfunding: 'Reduce Overfunding',
   panel_reset_available: 'Reset Available Amounts',
+  panel_back_to_summary: 'Back to month summary',
+  panel_goal: 'Goal',
+  panel_goal_target: 'Target amount',
+  panel_goal_funded: 'Goal reached',
+  panel_goal_remaining: '{amount} still needed',
+  panel_history: 'History',
 
   // Transaction table
   tx_col_account: 'Account',
@@ -189,6 +195,27 @@ const t: TranslationSet = {
   acct_vehicle_desc: 'Car or vehicle value',
   acct_loan: 'Loan',
   acct_loan_desc: 'Mortgage, personal loan, or debt owed',
+
+  // Filter bar
+  filter_all: 'All',
+  filter_uncleared: 'Uncleared',
+  filter_needs_category: 'Needs Category',
+  filter_active: 'Active ×',
+  filter_showing: '{count} transactions shown',
+  filter_clear: 'Clear filter',
+
+  // Import dialog
+  import_title: 'Import Transactions',
+  import_account: 'Target Account',
+  import_drop_hint: 'Drop a CSV file here or click to browse',
+  import_formats_hint: 'Supported: native CSV, 1822direkt CSV',
+  import_no_rows: 'No transactions found in the file.',
+  import_preview: '{count} transactions detected (format: {format}) — preview (max 50):',
+  import_preview_more: '… and {count} more',
+  import_confirm: 'Import {count} transactions',
+  import_importing: 'Importing…',
+  import_result: '{imported} imported, {duplicates} duplicates skipped (of {total} total).',
+  import_choose_file: 'Choose File',
 
   // Reflect page
   reflect_title: 'Reflect',

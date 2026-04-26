@@ -8,6 +8,7 @@ import { useI18n } from '@/lib/i18n';
 interface BudgetRowProps {
   categoryId: number;
   name: string;
+  color?: string | null;
   assigned: number;
   activity: number;
   available: number;
@@ -15,100 +16,90 @@ interface BudgetRowProps {
   goalAmount: number | null;
   goalType: string | null;
   month: string;
+  isSelected?: boolean;
+  onSelect?: () => void;
   onAssignChange: (categoryId: number, month: string, value: number) => void;
 }
 
 export default function BudgetRow({
-  categoryId,
-  name,
-  assigned,
-  activity,
-  available,
-  isGoal,
-  goalAmount,
-  goalType,
-  month,
-  onAssignChange,
+  categoryId, name, color, assigned, activity, available,
+  isGoal, goalAmount, goalType, month,
+  isSelected, onSelect, onAssignChange,
 }: BudgetRowProps) {
   const { t } = useI18n();
-  const num = Number(assigned) || 0;
   const [editing, setEditing] = useState(false);
-  const [editVal, setEditVal] = useState(num.toFixed(2).replace('.', ','));
+  const [editVal, setEditVal] = useState((Number(assigned) || 0).toFixed(2).replace('.', ','));
   const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    if (!editing) {
-      setEditVal((Number(assigned) || 0).toFixed(2).replace('.', ','));
-    }
+    if (!editing) setEditVal((Number(assigned) || 0).toFixed(2).replace('.', ','));
   }, [assigned, editing]);
 
   const overspent = available < 0;
-  const funded = goalAmount ? available >= goalAmount : false;
+  const funded = goalAmount != null && available >= goalAmount;
   const neededEventually = isGoal && goalType === 'eventual' && !funded;
 
   function handleBlur() {
     setEditing(false);
     const numeric = parseFloat(editVal.replace(',', '.'));
-    if (!isNaN(numeric) && numeric !== assigned) {
-      onAssignChange(categoryId, month, numeric);
-    }
+    if (!isNaN(numeric) && numeric !== assigned) onAssignChange(categoryId, month, numeric);
   }
 
-  function handleFocus() {
-    const formatted = (Number(assigned) || 0).toFixed(2).replace('.', ',');
-    setEditVal(formatted);
+  function handleAssignClick(e: React.MouseEvent) {
+    e.stopPropagation();
+    setEditVal((Number(assigned) || 0).toFixed(2).replace('.', ','));
     setEditing(true);
     setTimeout(() => inputRef.current?.select(), 0);
   }
 
   const availableBadge = () => {
-    if (overspent) {
-      return (
-        <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold" style={{ backgroundColor: 'var(--badge-red)', color: 'var(--badge-red-text)' }}>
-          {fmt(available)}
-        </span>
-      );
-    }
-    if (funded) {
-      return (
-        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-semibold" style={{ backgroundColor: 'var(--badge-green)', color: 'var(--badge-green-text)' }}>
-          <CheckCircle2 size={11} /> {fmt(available)}
-        </span>
-      );
-    }
-    if (neededEventually) {
-      return (
-        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-semibold bg-orange-100 text-orange-700">
-          <Clock size={11} /> {fmt(available)}
-        </span>
-      );
-    }
-    if (available > 0) {
-      return (
-        <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold" style={{ backgroundColor: 'var(--badge-green)', color: 'var(--badge-green-text)' }}>
-          {fmt(available)}
-        </span>
-      );
-    }
+    if (overspent) return (
+      <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold" style={{ backgroundColor: 'var(--badge-red)', color: 'var(--badge-red-text)' }}>
+        {fmt(available)}
+      </span>
+    );
+    if (funded) return (
+      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-semibold" style={{ backgroundColor: 'var(--badge-green)', color: 'var(--badge-green-text)' }}>
+        <CheckCircle2 size={11} /> {fmt(available)}
+      </span>
+    );
+    if (neededEventually) return (
+      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-semibold bg-orange-100 text-orange-700">
+        <Clock size={11} /> {fmt(available)}
+      </span>
+    );
+    if (available > 0) return (
+      <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold" style={{ backgroundColor: 'var(--badge-green)', color: 'var(--badge-green-text)' }}>
+        {fmt(available)}
+      </span>
+    );
     return <span className="text-sm text-gray-400">{fmt(available)}</span>;
   };
 
-  const subtext = () => {
+  const sub = (() => {
     if (overspent) return t('budget_overspent_sub', { abs: fmt(Math.abs(available)), assigned: fmt(assigned) });
     if (funded) return t('budget_funded');
     if (neededEventually && goalAmount) return t('budget_needed_eventually', { amount: fmt(goalAmount - Math.max(0, available)) });
     return null;
-  };
-
-  const sub = subtext();
+  })();
 
   return (
-    <tr className="border-b border-gray-100 hover:bg-gray-50 group">
+    <tr
+      className={`border-b border-gray-100 cursor-pointer group transition-colors ${isSelected ? 'bg-blue-50' : 'hover:bg-gray-50'}`}
+      onClick={onSelect}
+    >
+      {/* Selection indicator */}
       <td className="w-8 px-3 py-2">
-        <input type="checkbox" className="rounded border-gray-300" />
+        <div className={`w-1.5 h-6 rounded-full mx-auto transition-colors ${isSelected ? 'bg-blue-500' : 'bg-transparent group-hover:bg-gray-200'}`} />
       </td>
       <td className="px-3 py-2">
-        <div className="text-sm text-gray-800">{name}</div>
+        <div className="flex items-center gap-2">
+          <div
+            className="w-2.5 h-2.5 rounded-full shrink-0"
+            style={{ backgroundColor: color ?? '#d1d5db' }}
+          />
+          <div className={`text-sm ${isSelected ? 'text-blue-700 font-medium' : 'text-gray-800'}`}>{name}</div>
+        </div>
         {sub && (
           <div className={`text-xs mt-0.5 ${overspent ? 'text-red-500' : funded ? 'text-green-600' : 'text-orange-500'}`}>
             {sub}
@@ -125,10 +116,11 @@ export default function BudgetRow({
             onChange={e => setEditVal(e.target.value)}
             onBlur={handleBlur}
             onKeyDown={e => { if (e.key === 'Enter') handleBlur(); if (e.key === 'Escape') setEditing(false); }}
+            onClick={e => e.stopPropagation()}
           />
         ) : (
           <button
-            onClick={handleFocus}
+            onClick={handleAssignClick}
             className="text-sm text-gray-700 hover:text-blue-600 hover:bg-blue-50 px-2 py-0.5 rounded w-full text-right"
           >
             {fmt(assigned)}

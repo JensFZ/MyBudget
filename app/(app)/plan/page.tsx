@@ -10,6 +10,7 @@ import PlanRightPanel from '@/components/PlanRightPanel';
 interface BudgetEntry {
   category_id: number;
   category_name: string;
+  category_color: string | null;
   group_id: number;
   group_name: string;
   group_sort: number;
@@ -39,6 +40,7 @@ export default function PlanPage() {
   const [showMonthPicker, setShowMonthPicker] = useState(false);
   const monthPickerRef = useRef<HTMLDivElement>(null);
   const [filter, setFilter] = useState<FilterType>('all');
+  const [selectedCategoryId, setSelectedCategoryId] = useState<number | null>(null);
 
   // Inline add category state
   const [addingCategoryToGroup, setAddingCategoryToGroup] = useState<number | null>(null);
@@ -82,6 +84,15 @@ export default function PlanPage() {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ category_id: categoryId, month, assigned: value }),
+    });
+    load();
+  }
+
+  async function handleColorChange(categoryId: number, color: string | null) {
+    await fetch(`/api/categories/${categoryId}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ color }),
     });
     load();
   }
@@ -363,6 +374,7 @@ export default function PlanPage() {
                         key={row.category_id}
                         categoryId={row.category_id}
                         name={row.category_name}
+                        color={row.category_color}
                         assigned={row.assigned}
                         activity={row.activity}
                         available={row.available}
@@ -370,6 +382,8 @@ export default function PlanPage() {
                         goalAmount={row.goal_amount}
                         goalType={row.goal_type}
                         month={month}
+                        isSelected={selectedCategoryId === row.category_id}
+                        onSelect={() => setSelectedCategoryId(id => id === row.category_id ? null : row.category_id)}
                         onAssignChange={handleAssignChange}
                       />
                     ))}
@@ -435,7 +449,15 @@ export default function PlanPage() {
         </div>
 
         {/* Right panel */}
-        <PlanRightPanel month={month} budgets={budgets} readyToAssign={readyToAssign} />
+        <PlanRightPanel
+          month={month}
+          budgets={budgets}
+          readyToAssign={readyToAssign}
+          selectedCategory={budgets.find(b => b.category_id === selectedCategoryId) ?? null}
+          onDeselect={() => setSelectedCategoryId(null)}
+          onAssignChange={handleAssignChange}
+          onColorChange={handleColorChange}
+        />
       </div>
 
       {/* Members Modal */}
