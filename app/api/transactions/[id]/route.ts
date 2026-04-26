@@ -12,7 +12,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
     JOIN accounts a ON t.account_id = a.id
     WHERE t.id = ? AND a.vault_id = ?
   `).get(Number(id), ctx.vaultId) as {
-    id: number; account_id: number; amount: number; date: string;
+    id: number; account_id: number; amount: number; date: string; cleared: number;
     transfer_account_id: number | null; account_name: string;
   } | undefined;
   if (!tx) return NextResponse.json({ error: 'Not found' }, { status: 404 });

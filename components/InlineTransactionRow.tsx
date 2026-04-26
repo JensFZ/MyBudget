@@ -19,6 +19,7 @@ export interface Category {
   id: number;
   group_id: number;
   name: string;
+  color?: string | null;
 }
 
 export interface SaveData {

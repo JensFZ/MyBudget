@@ -6,7 +6,10 @@ import { fmt } from '@/lib/format';
 import { useI18n } from '@/lib/i18n';
 import { Plus, FileUp, RotateCcw, RotateCw, Search, Star, Edit2, X, Check } from 'lucide-react';
 import TransactionTable from '@/components/TransactionTable';
+import ImportDialog from '@/components/ImportDialog';
 import type { Account, Category, CategoryGroup, SaveData } from '@/components/InlineTransactionRow';
+
+type Filter = 'all' | 'uncleared' | 'needs_category';
 
 interface AccountDetail {
   id: number;
@@ -44,12 +47,27 @@ export default function AccountPage({ params }: { params: Promise<{ id: string }
   const [categories, setCategories] = useState<Category[]>([]);
   const [groups, setGroups] = useState<CategoryGroup[]>([]);
   const [addingNew, setAddingNew] = useState(false);
+  const [showImport, setShowImport] = useState(false);
   const [search, setSearch] = useState('');
   const [showSearch, setShowSearch] = useState(false);
+  const [activeFilter, setActiveFilter] = useState<Filter>('all');
   const [showEditAccount, setShowEditAccount] = useState(false);
   const [editAccountName, setEditAccountName] = useState('');
   const [editAccountType, setEditAccountType] = useState('');
   const [editAccountBalance, setEditAccountBalance] = useState('');
+
+  const needsCategoryCount = transactions.filter(tx => !tx.category_id && tx.amount < 0 && !tx.transfer_account_id).length;
+
+  const filtered = transactions.filter(tx => {
+    if (search) {
+      const q = search.toLowerCase();
+      const haystack = `${tx.payee ?? ''} ${tx.memo ?? ''} ${tx.category_name ?? ''}`.toLowerCase();
+      if (!haystack.includes(q)) return false;
+    }
+    if (activeFilter === 'uncleared') return !tx.cleared;
+    if (activeFilter === 'needs_category') return !tx.category_id && tx.amount < 0 && !tx.transfer_account_id;
+    return true;
+  });
 
   const loadAccount = useCallback(async () => {
     const res = await fetch(`/api/accounts/${id}`);
@@ -57,11 +75,9 @@ export default function AccountPage({ params }: { params: Promise<{ id: string }
   }, [id]);
 
   const loadTransactions = useCallback(async () => {
-    const p = new URLSearchParams({ account_id: id });
-    if (search) p.set('search', search);
-    const res = await fetch(`/api/transactions?${p}`);
+    const res = await fetch(`/api/transactions?account_id=${id}`);
     setTransactions(await res.json());
-  }, [id, search]);
+  }, [id]);
 
   useEffect(() => {
     loadAccount();
@@ -130,14 +146,12 @@ export default function AccountPage({ params }: { params: Promise<{ id: string }
     if (!account) return;
     const today = new Date().toISOString().slice(0, 10);
 
-    // Save name/type
     await fetch(`/api/accounts/${id}`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ name: editAccountName.trim(), type: editAccountType }),
     });
 
-    // Balance adjustment transaction if changed
     const newBalance = parseFloat(editAccountBalance.replace(',', '.'));
     if (!isNaN(newBalance)) {
       const delta = Math.round((newBalance - account.balance) * 100) / 100;
@@ -164,7 +178,8 @@ export default function AccountPage({ params }: { params: Promise<{ id: string }
     window.dispatchEvent(new CustomEvent('accounts-updated'));
   }
 
-  async function handleToggleStarred() {    if (!account) return;
+  async function handleToggleStarred() {
+    if (!account) return;
     const newVal = account.starred ? 0 : 1;
     await fetch(`/api/accounts/${id}`, {
       method: 'PATCH',
@@ -174,6 +189,23 @@ export default function AccountPage({ params }: { params: Promise<{ id: string }
     setAccount({ ...account, starred: newVal });
     window.dispatchEvent(new CustomEvent('accounts-updated'));
   }
+
+  function toggleFilter(f: Filter) {
+    setActiveFilter(prev => prev === f ? 'all' : f);
+  }
+
+  const filterPill = (f: Filter, label: string) => (
+    <button
+      onClick={() => toggleFilter(f)}
+      className={`text-xs px-3 py-1 rounded-full border font-medium transition-colors ${
+        activeFilter === f
+          ? 'bg-blue-600 text-white border-blue-600'
+          : 'bg-white text-gray-600 border-gray-200 hover:border-gray-400'
+      }`}
+    >
+      {label}
+    </button>
+  );
 
   if (!account) return <div className="p-8 text-center text-gray-400">{t('accounts_loading')}</div>;
 
@@ -239,6 +271,29 @@ export default function AccountPage({ params }: { params: Promise<{ id: string }
         </div>
       </div>
 
+      {/* Needs category banner */}
+      {needsCategoryCount > 0 && (
+        <button
+          onClick={() => toggleFilter('needs_category')}
+          className={`w-full text-left border-b px-6 py-2 flex items-center justify-between shrink-0 transition-colors ${
+            activeFilter === 'needs_category'
+              ? 'bg-yellow-100 border-yellow-300'
+              : 'bg-yellow-50 border-yellow-200 hover:bg-yellow-100'
+          }`}
+        >
+          <span className="text-sm text-yellow-800">
+            {t('accounts_needs_category', { count: String(needsCategoryCount) })}
+          </span>
+          <span className={`text-xs font-semibold px-3 py-1 rounded-full ${
+            activeFilter === 'needs_category'
+              ? 'bg-yellow-400 text-yellow-900'
+              : 'bg-yellow-100 text-yellow-700'
+          }`}>
+            {activeFilter === 'needs_category' ? t('filter_active') : t('accounts_needs_category_view')}
+          </span>
+        </button>
+      )}
+
       {/* Toolbar */}
       <div className="flex items-center gap-2 px-6 py-2 bg-white border-b shrink-0">
         <button
@@ -252,22 +307,39 @@ export default function AccountPage({ params }: { params: Promise<{ id: string }
             {t('account_record_payment')}
           </button>
         )}
-
-        <button className="flex items-center gap-1 text-sm text-gray-600 border border-gray-200 rounded-lg px-3 py-1.5 hover:bg-gray-50">
+        <button
+          onClick={() => setShowImport(true)}
+          className="flex items-center gap-1 text-sm text-gray-600 border border-gray-200 rounded-lg px-3 py-1.5 hover:bg-gray-50"
+        >
           <FileUp size={14} /> {t('accounts_file_import')}
         </button>
         <button className="p-1.5 text-gray-400 hover:text-gray-700 border border-gray-200 rounded"><RotateCcw size={14} /></button>
         <button className="p-1.5 text-gray-400 hover:text-gray-700 border border-gray-200 rounded"><RotateCw size={14} /></button>
+
+        {/* Filter pills */}
+        <div className="flex items-center gap-1.5 ml-3 border-l pl-3 border-gray-200">
+          {filterPill('all', t('filter_all'))}
+          {filterPill('uncleared', t('filter_uncleared'))}
+          {filterPill('needs_category', t('filter_needs_category'))}
+        </div>
+
         <div className="ml-auto flex items-center gap-2">
           {showSearch ? (
-            <input
-              autoFocus
-              className="border border-gray-200 rounded-lg px-3 py-1.5 text-sm outline-none focus:border-blue-400 w-48"
-              placeholder={t('accounts_search_placeholder')}
-              value={search}
-              onChange={e => setSearch(e.target.value)}
-              onBlur={() => { if (!search) setShowSearch(false); }}
-            />
+            <div className="flex items-center gap-1">
+              <input
+                autoFocus
+                className="border border-gray-200 rounded-lg px-3 py-1.5 text-sm outline-none focus:border-blue-400 w-48"
+                placeholder={t('accounts_search_placeholder')}
+                value={search}
+                onChange={e => setSearch(e.target.value)}
+                onBlur={() => { if (!search) setShowSearch(false); }}
+              />
+              {search && (
+                <button onClick={() => setSearch('')} className="text-gray-400 hover:text-gray-600">
+                  <X size={14} />
+                </button>
+              )}
+            </div>
           ) : (
             <button onClick={() => setShowSearch(true)} className="flex items-center gap-1 text-sm text-gray-500 hover:text-gray-700">
               <Search size={16} /> {t('accounts_search')}
@@ -276,10 +348,25 @@ export default function AccountPage({ params }: { params: Promise<{ id: string }
         </div>
       </div>
 
+      {/* Active filter indicator */}
+      {(activeFilter !== 'all' || search) && (
+        <div className="bg-blue-50 border-b border-blue-100 px-6 py-1.5 flex items-center gap-2 shrink-0">
+          <span className="text-xs text-blue-700">
+            {t('filter_showing', { count: String(filtered.length) })}
+          </span>
+          <button
+            onClick={() => { setActiveFilter('all'); setSearch(''); }}
+            className="text-xs text-blue-600 hover:text-blue-800 underline ml-1"
+          >
+            {t('filter_clear')}
+          </button>
+        </div>
+      )}
+
       {/* Transaction table */}
       <div className="flex-1 overflow-y-auto bg-white">
         <TransactionTable
-          transactions={transactions}
+          transactions={filtered}
           showAccount={false}
           accounts={accounts}
           categories={categories}
@@ -293,6 +380,15 @@ export default function AccountPage({ params }: { params: Promise<{ id: string }
           onToggleCleared={handleToggleCleared}
         />
       </div>
+
+      {showImport && (
+        <ImportDialog
+          accounts={accounts}
+          defaultAccountId={account.id}
+          onClose={() => setShowImport(false)}
+          onImported={() => { loadAccount(); loadTransactions(); }}
+        />
+      )}
 
       {/* Edit account modal */}
       {showEditAccount && (

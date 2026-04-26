@@ -60,10 +60,29 @@ export default function TransactionTable({
 }: Props) {
   const { t } = useI18n();
   const [editingId, setEditingId] = useState<number | null>(null);
+  const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
 
   function handleRowClick(id: number) {
     if (editingId === id) return;
     setEditingId(id);
+  }
+
+  function toggleRow(id: number) {
+    setSelectedIds(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id); else next.add(id);
+      return next;
+    });
+  }
+
+  const allSelected = transactions.length > 0 && transactions.every(tx => selectedIds.has(tx.id));
+
+  function toggleAll() {
+    if (allSelected) {
+      setSelectedIds(new Set());
+    } else {
+      setSelectedIds(new Set(transactions.map(tx => tx.id)));
+    }
   }
 
   const colSpan = (showAccount ? 9 : 8) + ACTION_COL;
@@ -73,7 +92,12 @@ export default function TransactionTable({
       <thead>
         <tr className="bg-gray-50 border-b border-gray-200 text-xs font-semibold text-gray-500 uppercase tracking-wide sticky top-0 z-10">
           <th className="w-8 px-3 py-2">
-            <input type="checkbox" className="rounded border-gray-300" />
+            <input
+              type="checkbox"
+              className="rounded border-gray-300"
+              checked={allSelected}
+              onChange={toggleAll}
+            />
           </th>
           <th className="w-6 px-1 py-2" />
           {showAccount && <th className="px-3 py-2 text-left">{t('tx_col_account')}</th>}
@@ -151,7 +175,12 @@ export default function TransactionTable({
               onClick={() => handleRowClick(tx.id)}
             >
               <td className="w-8 px-3 py-2" onClick={e => e.stopPropagation()}>
-                <input type="checkbox" className="rounded border-gray-300" onChange={() => {}} />
+                <input
+                  type="checkbox"
+                  className="rounded border-gray-300"
+                  checked={selectedIds.has(tx.id)}
+                  onChange={() => toggleRow(tx.id)}
+                />
               </td>
               <td className="w-6 px-1 py-2">
                 <div className={`w-2 h-2 rounded-full ${tx.cleared ? 'bg-green-400' : 'bg-blue-400'}`} />
@@ -173,8 +202,18 @@ export default function TransactionTable({
                   <span className="inline-block bg-orange-100 text-orange-700 text-xs px-2 py-0.5 rounded">
                     {t('tx_needs_category')}
                   </span>
+                ) : tx.category_name ? (
+                  <span className="flex items-center gap-1.5">
+                    {(() => {
+                      const cat = categories.find(c => c.id === tx.category_id);
+                      return cat?.color
+                        ? <span className="w-2 h-2 rounded-full shrink-0 inline-block" style={{ backgroundColor: cat.color }} />
+                        : null;
+                    })()}
+                    <span className="text-gray-500">{tx.category_name}</span>
+                  </span>
                 ) : (
-                  <span className="text-gray-500">{tx.category_name ?? ''}</span>
+                  <span className="text-gray-500" />
                 )}
               </td>
               <td className="px-3 py-2 text-gray-400 text-xs">{tx.memo ?? ''}</td>
