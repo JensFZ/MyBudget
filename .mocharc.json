@@ -1,0 +1,6 @@
+{
+  "import": "tsx",
+  "spec": "tests/selenium/**/*.test.ts",
+  "timeout": 30000,
+  "exit": true
+}

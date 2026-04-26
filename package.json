@@ -6,7 +6,8 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "test:selenium": "mocha"
   },
   "dependencies": {
     "@base-ui/react": "^1.4.1",
@@ -31,13 +32,19 @@
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
     "@types/bcryptjs": "^2.4.6",
+    "@types/mocha": "^10.0.10",
     "@types/node": "^20",
     "@types/qrcode": "^1.5.6",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "@types/selenium-webdriver": "^4.35.5",
     "eslint": "^9",
     "eslint-config-next": "16.2.4",
+    "mocha": "^11.7.5",
+    "selenium-webdriver": "^4.43.0",
     "tailwindcss": "^4",
+    "ts-node": "^10.9.2",
+    "tsx": "^4.21.0",
     "typescript": "^5"
   }
 }
