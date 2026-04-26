@@ -91,7 +91,7 @@ export default function AddAccountDialog({ open, onClose, onSaved }: Props) {
 
   return (
     <Dialog open={open} onOpenChange={v => { if (!v) handleClose(); }}>
-      <DialogContent className="max-w-lg">
+      <DialogContent className="max-w-lg sm:max-w-2xl">
         <DialogHeader>
           <div className="flex items-center gap-2">
             {step === 2 && (
@@ -109,7 +109,7 @@ export default function AddAccountDialog({ open, onClose, onSaved }: Props) {
         </DialogHeader>
 
         {step === 1 && (
-          <div className="space-y-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
             {/* Budget accounts */}
             <div>
               <p className="text-xs font-semibold uppercase tracking-wide text-gray-500 mb-2">

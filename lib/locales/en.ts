@@ -49,6 +49,7 @@ const t: TranslationSet = {
   vault_new_name_placeholder: 'My Budget',
   vault_members_title: 'Members',
   vault_invite_generate: 'Generate invite link',
+  vault_invite_copy: 'Copy',
   vault_invite_copied: 'Link copied!',
   vault_invite_link_label: 'Invite link (valid 7 days)',
   vault_member_role_owner: 'Owner',
