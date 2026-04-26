@@ -244,7 +244,7 @@ export default function AccountPage({ params }: { params: Promise<{ id: string }
   return (
     <div className="flex flex-col h-full">
       {/* Account header */}
-      <div className="bg-white border-b px-6 py-4 shrink-0">
+      <div className="bg-white border-b px-4 md:px-6 py-4 shrink-0">
         <div className="flex items-center justify-between mb-1">
           <div className="flex items-center gap-2">
             <h1 className="text-xl font-bold text-gray-900">{account.name}</h1>
@@ -270,7 +270,7 @@ export default function AccountPage({ params }: { params: Promise<{ id: string }
           <span>·</span>
           <span>{t('account_not_yet_reconciled')}</span>
         </div>
-        <div className="flex items-center gap-6 text-sm">
+        <div className="flex flex-wrap items-center gap-x-6 gap-y-2 text-sm">
           <div>
             <span className={`font-bold ${account.clearedBalance < 0 ? 'text-red-600' : 'text-gray-900'}`}>
               {fmt(account.clearedBalance)}
@@ -318,7 +318,7 @@ export default function AccountPage({ params }: { params: Promise<{ id: string }
       )}
 
       {/* Toolbar */}
-      <div className="flex items-center gap-2 px-6 py-2 bg-white border-b shrink-0">
+      <div className="flex flex-wrap items-center gap-2 px-4 md:px-6 py-2 bg-white border-b shrink-0">
         <button
           onClick={() => setAddingNew(true)}
           className="flex items-center gap-1 bg-blue-600 text-white text-sm rounded-lg px-3 py-1.5 hover:bg-blue-700"
@@ -340,7 +340,7 @@ export default function AccountPage({ params }: { params: Promise<{ id: string }
         <button className="p-1.5 text-gray-400 hover:text-gray-700 border border-gray-200 rounded"><RotateCw size={14} /></button>
 
         {/* Filter pills */}
-        <div className="flex items-center gap-1.5 ml-3 border-l pl-3 border-gray-200">
+        <div className="flex items-center gap-1.5 mt-1 md:mt-0 md:ml-3 md:border-l md:pl-3 border-gray-200">
           {filterPill('all', t('filter_all'))}
           {filterPill('uncleared', t('filter_uncleared'))}
           {filterPill('needs_category', t('filter_needs_category'))}

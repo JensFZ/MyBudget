@@ -26,7 +26,7 @@ interface Account {
   archived: number;
 }
 
-export default function Sidebar() {
+export default function Sidebar({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) {
   const pathname = usePathname();
   const router = useRouter();
   const { t, lang, setLang } = useI18n();
@@ -102,6 +102,9 @@ export default function Sidebar() {
     window.addEventListener('accounts-updated', loadAccounts);
     return () => window.removeEventListener('accounts-updated', loadAccounts);
   }, []);
+
+  // Close sidebar drawer on mobile when navigating
+  useEffect(() => { onClose(); }, [pathname]); // eslint-disable-line react-hooks/exhaustive-deps
 
   function switchVault(id: number) {
     document.cookie = `vault_id=${id}; path=/; max-age=${60 * 60 * 24 * 365}; samesite=lax`;
@@ -351,10 +354,20 @@ export default function Sidebar() {
 
   return (
     <>
+      {isOpen && (
+        <div className="fixed inset-0 z-30 bg-black/50 md:hidden" onClick={onClose} />
+      )}
       <aside
-        className="w-60 flex-shrink-0 flex flex-col h-full overflow-y-auto"
+        className={`fixed inset-y-0 left-0 z-40 w-60 flex flex-col h-full overflow-y-auto transition-transform duration-200 md:relative md:translate-x-0 md:flex-shrink-0 ${isOpen ? 'translate-x-0' : '-translate-x-full'}`}
         style={{ backgroundColor: 'var(--sidebar-bg)' }}
       >
+        <button
+          onClick={onClose}
+          className="absolute top-3 right-3 p-1.5 text-slate-400 hover:text-white md:hidden"
+          aria-label="Close navigation"
+        >
+          <X size={18} />
+        </button>
         {/* User header with dropdown */}
         <div className="relative" ref={userMenuRef}>
           <button

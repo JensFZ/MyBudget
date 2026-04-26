@@ -172,7 +172,7 @@ export default function PlanPage() {
     <div className="flex flex-col h-full">
       {/* Top header bar */}
       <div
-        className="flex items-center gap-4 px-6 py-3 border-b shrink-0"
+        className="flex flex-wrap items-center gap-3 px-4 md:px-6 py-3 border-b shrink-0"
         style={{ backgroundColor: readyToAssign < 0 ? 'var(--overspent-red)' : 'var(--ready-green)' }}
       >
         {/* Month navigation */}
@@ -281,7 +281,8 @@ export default function PlanPage() {
           </div>
 
           {/* Budget table */}
-          <table className="w-full border-collapse">
+          <div className="overflow-x-auto">
+          <table className="w-full border-collapse min-w-[500px]">
             <thead>
               <tr className="bg-gray-50 border-b border-gray-200 text-xs font-semibold text-gray-500 uppercase tracking-wide sticky top-[41px] z-10">
                 <th className="w-8 px-3 py-2">
@@ -405,6 +406,7 @@ export default function PlanPage() {
               )}
             </tbody>
           </table>
+          </div>
 
           {/* Add group link at bottom */}
           {!addingGroup && (

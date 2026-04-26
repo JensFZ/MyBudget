@@ -88,7 +88,8 @@ export default function TransactionTable({
   const colSpan = (showAccount ? 9 : 8) + ACTION_COL;
 
   return (
-    <table className="w-full text-sm border-collapse">
+    <div className="overflow-x-auto">
+    <table className="w-full text-sm border-collapse min-w-[640px]">
       <thead>
         <tr className="bg-gray-50 border-b border-gray-200 text-xs font-semibold text-gray-500 uppercase tracking-wide sticky top-0 z-10">
           <th className="w-8 px-3 py-2">
@@ -243,5 +244,6 @@ export default function TransactionTable({
         })}
       </tbody>
     </table>
+    </div>
   );
 }

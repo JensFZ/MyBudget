@@ -167,7 +167,7 @@ export default function PlanRightPanel({ month, budgets, readyToAssign, selected
       : null;
 
     return (
-      <aside className="w-72 shrink-0 bg-white border-l border-gray-200 overflow-y-auto">
+      <aside className="hidden md:flex md:flex-col w-72 shrink-0 bg-white border-l border-gray-200 overflow-y-auto">
         <div className="p-4">
           {/* Back button */}
           <button
@@ -383,7 +383,7 @@ export default function PlanRightPanel({ month, budgets, readyToAssign, selected
 
   // ── Month summary panel (default) ─────────────────────────────────────────
   return (
-    <aside className="w-72 shrink-0 bg-white border-l border-gray-200 overflow-y-auto">
+    <aside className="hidden md:flex md:flex-col w-72 shrink-0 bg-white border-l border-gray-200 overflow-y-auto">
       <div className="p-4">
         <div className="mb-4">
           <button className="flex items-center gap-1 text-sm font-semibold text-gray-700 mb-3">
