@@ -1,7 +1,7 @@
 import { Builder, WebDriver, By, until, WebElement } from 'selenium-webdriver';
 import chrome from 'selenium-webdriver/chrome.js';
 
-export const BASE_URL = process.env.TEST_BASE_URL ?? 'http://localhost:3000';
+export const BASE_URL = process.env.TEST_BASE_URL ?? 'http://localhost:3002';
 export const TEST_EMAIL = process.env.TEST_EMAIL ?? 'test@example.com';
 export const TEST_PASSWORD = process.env.TEST_PASSWORD ?? 'password';
 

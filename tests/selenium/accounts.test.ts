@@ -81,15 +81,17 @@ describe('Accounts page', function () {
   });
 
   it('search input filters transactions', async () => {
-    // Look for the search button/icon
     const searchBtns = await driver.findElements(
       By.xpath('//button[.//*[contains(@class,"lucide-search")] or @aria-label="Search"]'),
     );
-    if (searchBtns.length === 0) return; // search not available
+    assert.ok(searchBtns.length > 0, 'Search button should be present on accounts page');
 
     await searchBtns[0].click();
-    await driver.sleep(300);
-    const searchInput = await driver.findElements(By.css('input[type="search"], input[placeholder*="such"], input[placeholder*="Search"]'));
-    assert.ok(searchInput.length > 0, 'Search input should appear after clicking search');
+    await driver.wait(
+      until.elementLocated(By.css('input[type="search"], input[placeholder*="such"], input[placeholder*="Search"]')),
+      5_000,
+    );
+    const searchInput = await driver.findElement(By.css('input[type="search"], input[placeholder*="such"], input[placeholder*="Search"]'));
+    assert.ok(await searchInput.isDisplayed(), 'Search input should appear after clicking search');
   });
 });

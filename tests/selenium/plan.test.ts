@@ -1,4 +1,4 @@
-import { WebDriver, By, until, Key } from 'selenium-webdriver';
+import { WebDriver, By, until } from 'selenium-webdriver';
 import assert from 'node:assert/strict';
 import { buildDriver, BASE_URL, login, waitForElement } from './helpers/driver.js';
 
@@ -41,26 +41,43 @@ describe('Plan page', function () {
   });
 
   it('navigates to previous month', async () => {
-    await waitForElement(driver, 'button');
-    // The prev-month button has class "p-1 text-white/80 hover:text-white" and comes before the month label
+    // Capture the current month label before navigating
+    await driver.wait(
+      until.elementLocated(By.xpath('//*[contains(text(),"Bereit") or contains(text(),"Ready")]')),
+      10_000,
+    );
+    const monthLabelEl = await driver.findElement(
+      By.xpath('(//button[contains(@class,"text-white")])[2]'),
+    ).catch(() => driver.findElement(By.css('header button, nav button')));
+    const monthBefore = await monthLabelEl.getText().catch(() => '');
+
     const prevBtn = await driver.findElement(
-      By.css('button.\\[\\&\\>svg\\]\\:size-4, button[class*="text-white\\/80"]'),
-    ).catch(() =>
-      // fallback: first button in the top header area
-      driver.findElement(By.xpath('(//button[contains(@class,"text-white")])[1]')),
+      By.xpath('(//button[contains(@class,"text-white")])[1]'),
     );
     await prevBtn.click();
-    await driver.sleep(500);
+    await driver.wait(
+      until.elementLocated(By.xpath('//*[contains(text(),"Bereit") or contains(text(),"Ready")]')),
+      8_000,
+    );
 
+    const monthAfter = await monthLabelEl.getText().catch(() => '');
     const url = await driver.getCurrentUrl();
     assert.ok(url.includes('/plan'), 'Should stay on plan page after navigation');
+    // If we could read the month label, it should have changed
+    if (monthBefore && monthAfter) {
+      assert.notEqual(monthAfter, monthBefore, 'Month label should change after navigating to previous month');
+    }
   });
 
-  it('can open the group-add input', async () => {
-    // The "+" button to add a group should be present
-    const addGroupBtns = await driver.findElements(
-      By.xpath('//button[contains(@class,"text-blue") or .//*[local-name()="svg"]]'),
+  it('has a button to add a budget group', async () => {
+    await driver.wait(
+      until.elementLocated(By.xpath('//*[contains(text(),"Bereit") or contains(text(),"Ready")]')),
+      10_000,
     );
-    assert.ok(addGroupBtns.length > 0, 'Should have action buttons on plan page');
+    // The add-group button typically sits at the bottom of the category list
+    const addGroupBtn = await driver.findElements(
+      By.xpath('//button[.//*[local-name()="svg"] and (contains(@class,"text-blue") or contains(@class,"blue"))]'),
+    );
+    assert.ok(addGroupBtn.length > 0, 'Should have at least one blue action button (add group/category)');
   });
 });
