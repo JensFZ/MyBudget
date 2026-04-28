@@ -62,7 +62,7 @@ export async function GET(req: NextRequest) {
     FROM categories c
     LEFT JOIN category_groups cg ON c.group_id = cg.id
     LEFT JOIN budgets b ON b.category_id = c.id AND b.month = ?
-    WHERE cg.vault_id = ?
+    WHERE cg.vault_id = ? AND c.is_hidden = 0 AND cg.is_hidden = 0
     ORDER BY cg.sort_order, c.sort_order
   `).all(
     `${month}-01`, nextMonth, ctx.vaultId,   // activity: this month only
@@ -72,7 +72,7 @@ export async function GET(req: NextRequest) {
   );
 
   const allGroups = db.prepare(
-    'SELECT id, name, sort_order FROM category_groups WHERE vault_id = ? ORDER BY sort_order'
+    'SELECT id, name, sort_order FROM category_groups WHERE vault_id = ? AND is_hidden = 0 ORDER BY sort_order'
   ).all(ctx.vaultId) as { id: number; name: string; sort_order: number }[];
 
   const accounts = db.prepare(

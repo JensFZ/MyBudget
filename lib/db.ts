@@ -62,6 +62,8 @@ const migrations: string[] = [
   `ALTER TABLE categories ADD COLUMN color TEXT`,
   `ALTER TABLE accounts ADD COLUMN archived INTEGER DEFAULT 0`,
   `ALTER TABLE categories ADD COLUMN goal_date TEXT`,
+  `ALTER TABLE categories ADD COLUMN is_hidden INTEGER DEFAULT 0`,
+  `ALTER TABLE category_groups ADD COLUMN is_hidden INTEGER DEFAULT 0`,
 ];
 for (const sql of migrations) {
   try { db.exec(sql); } catch { /* already exists */ }

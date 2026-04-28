@@ -77,6 +77,12 @@ const t: TranslationSet = {
   plan_col_assigned: 'Przypisano',
   plan_col_activity: 'Aktywność',
   plan_col_available: 'Dostępne',
+  plan_archive: 'Archiwizuj',
+  plan_delete: 'Usuń',
+  plan_delete_confirm_category: 'Usunąć kategorię „{name}"?',
+  plan_delete_confirm_group: 'Usunąć grupę „{name}"?',
+  plan_delete_has_transactions: 'Ta kategoria ma transakcje i nie może być usunięta. Zamiast tego zarchiwizuj ją.',
+  plan_delete_group_has_categories: 'Ta grupa zawiera jeszcze kategorie. Najpierw usuń lub zarchiwizuj wszystkie kategorie.',
 
   // BudgetRow
   budget_overspent_sub: 'Przekroczono. {abs} z {assigned}',

@@ -2,7 +2,7 @@
 
 import { fmt } from '@/lib/format';
 import { useState, useEffect, useRef } from 'react';
-import { Clock, CheckCircle2 } from 'lucide-react';
+import { Clock, CheckCircle2, Archive, Trash2 } from 'lucide-react';
 import { useI18n } from '@/lib/i18n';
 
 interface BudgetRowProps {
@@ -19,12 +19,14 @@ interface BudgetRowProps {
   isSelected?: boolean;
   onSelect?: () => void;
   onAssignChange: (categoryId: number, month: string, value: number) => void;
+  onArchive?: () => void;
+  onDelete?: () => void;
 }
 
 export default function BudgetRow({
   categoryId, name, color, assigned, activity, available,
   isGoal, goalAmount, goalType, month,
-  isSelected, onSelect, onAssignChange,
+  isSelected, onSelect, onAssignChange, onArchive, onDelete,
 }: BudgetRowProps) {
   const { t } = useI18n();
   const [editing, setEditing] = useState(false);
@@ -98,7 +100,27 @@ export default function BudgetRow({
             className="w-2.5 h-2.5 rounded-full shrink-0"
             style={{ backgroundColor: color ?? '#d1d5db' }}
           />
-          <div className={`text-sm ${isSelected ? 'text-blue-700 font-medium' : 'text-gray-800'}`}>{name}</div>
+          <div className={`text-sm flex-1 ${isSelected ? 'text-blue-700 font-medium' : 'text-gray-800'}`}>{name}</div>
+          <div className="opacity-0 group-hover:opacity-100 flex items-center gap-0.5 ml-1">
+            {onArchive && (
+              <button
+                onClick={e => { e.stopPropagation(); onArchive(); }}
+                className="p-0.5 text-gray-400 hover:text-amber-500 rounded"
+                title={t('plan_archive')}
+              >
+                <Archive size={12} />
+              </button>
+            )}
+            {onDelete && (
+              <button
+                onClick={e => { e.stopPropagation(); onDelete(); }}
+                className="p-0.5 text-gray-400 hover:text-red-500 rounded"
+                title={t('plan_delete')}
+              >
+                <Trash2 size={12} />
+              </button>
+            )}
+          </div>
         </div>
         {sub && (
           <div className={`text-xs mt-0.5 ${overspent ? 'text-red-500' : funded ? 'text-green-600' : 'text-orange-500'}`}>

@@ -77,6 +77,12 @@ const t: TranslationSet = {
   plan_col_assigned: 'Assigned',
   plan_col_activity: 'Activity',
   plan_col_available: 'Available',
+  plan_archive: 'Archive',
+  plan_delete: 'Delete',
+  plan_delete_confirm_category: 'Delete category "{name}"?',
+  plan_delete_confirm_group: 'Delete group "{name}"?',
+  plan_delete_has_transactions: 'This category has transactions and cannot be deleted. Archive it instead.',
+  plan_delete_group_has_categories: 'This group still has categories. Delete or archive all categories first.',
 
   // BudgetRow
   budget_overspent_sub: 'Overspent. {abs} of {assigned}',

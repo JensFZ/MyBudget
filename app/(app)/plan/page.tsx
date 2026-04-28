@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { fmt } from '@/lib/format';
 import { useI18n } from '@/lib/i18n';
-import { ChevronDown, ChevronRight, Plus, X, HelpCircle, RotateCcw, RotateCw } from 'lucide-react';
+import { ChevronDown, ChevronRight, Plus, X, HelpCircle, RotateCcw, RotateCw, Archive, Trash2 } from 'lucide-react';
 import BudgetRow from '@/components/BudgetRow';
 import PlanRightPanel from '@/components/PlanRightPanel';
 
@@ -138,6 +138,44 @@ export default function PlanPage() {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ name }),
     });
+    load();
+  }
+
+  async function handleArchiveCategory(categoryId: number) {
+    await fetch(`/api/categories/${categoryId}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ is_hidden: true }),
+    });
+    load();
+  }
+
+  async function handleDeleteCategory(categoryId: number, name: string) {
+    if (!window.confirm(t('plan_delete_confirm_category', { name }))) return;
+    const res = await fetch(`/api/categories/${categoryId}`, { method: 'DELETE' });
+    if (res.status === 409) {
+      alert(t('plan_delete_has_transactions'));
+      return;
+    }
+    load();
+  }
+
+  async function handleArchiveGroup(groupId: number) {
+    await fetch(`/api/category-groups/${groupId}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ is_hidden: true }),
+    });
+    load();
+  }
+
+  async function handleDeleteGroup(groupId: number, name: string, hasCategories: boolean) {
+    if (hasCategories) {
+      alert(t('plan_delete_group_has_categories'));
+      return;
+    }
+    if (!window.confirm(t('plan_delete_confirm_group', { name }))) return;
+    await fetch(`/api/category-groups/${groupId}`, { method: 'DELETE' });
     load();
   }
 
@@ -338,6 +376,22 @@ export default function PlanPage() {
                           >
                             <Plus size={13} />
                           </button>
+                          <div className="opacity-0 group-hover/grouprow:opacity-100 flex items-center gap-0.5 ml-auto transition-opacity">
+                            <button
+                              onClick={e => { e.stopPropagation(); handleArchiveGroup(group.id); }}
+                              className="p-0.5 text-gray-400 hover:text-amber-500 rounded"
+                              title={t('plan_archive')}
+                            >
+                              <Archive size={13} />
+                            </button>
+                            <button
+                              onClick={e => { e.stopPropagation(); handleDeleteGroup(group.id, group.name, group.rows.length > 0); }}
+                              className="p-0.5 text-gray-400 hover:text-red-500 rounded"
+                              title={t('plan_delete')}
+                            >
+                              <Trash2 size={13} />
+                            </button>
+                          </div>
                         </div>
                       </td>
                       <td className="px-3 py-2" />
@@ -366,6 +420,8 @@ export default function PlanPage() {
                         isSelected={selectedCategoryId === row.category_id}
                         onSelect={() => setSelectedCategoryId(id => id === row.category_id ? null : row.category_id)}
                         onAssignChange={handleAssignChange}
+                        onArchive={() => handleArchiveCategory(row.category_id)}
+                        onDelete={() => handleDeleteCategory(row.category_id, row.category_name)}
                       />
                     ))}
 
