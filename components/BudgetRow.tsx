@@ -101,7 +101,7 @@ export default function BudgetRow({
             style={{ backgroundColor: color ?? '#d1d5db' }}
           />
           <div className={`text-sm flex-1 ${isSelected ? 'text-blue-700 font-medium' : 'text-gray-800'}`}>{name}</div>
-          <div className="opacity-0 group-hover:opacity-100 flex items-center gap-0.5 ml-1">
+          <div className="flex items-center gap-0.5 ml-1">
             {onArchive && (
               <button
                 onClick={e => { e.stopPropagation(); onArchive(); }}

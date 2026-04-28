@@ -376,7 +376,7 @@ export default function PlanPage() {
                           >
                             <Plus size={13} />
                           </button>
-                          <div className="opacity-0 group-hover/grouprow:opacity-100 flex items-center gap-0.5 ml-auto transition-opacity">
+                          <div className="flex items-center gap-0.5 ml-auto">
                             <button
                               onClick={e => { e.stopPropagation(); handleArchiveGroup(group.id); }}
                               className="p-0.5 text-gray-400 hover:text-amber-500 rounded"
