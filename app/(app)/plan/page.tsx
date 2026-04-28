@@ -18,6 +18,7 @@ interface BudgetEntry {
   activity: number;
   available: number;
   is_goal: number;
+  is_hidden: number;
   goal_amount: number | null;
   goal_type: string | null;
   goal_date: string | null;
@@ -27,6 +28,7 @@ interface GroupMeta {
   id: number;
   name: string;
   sort_order: number;
+  is_hidden: number;
 }
 
 interface BudgetData {
@@ -56,15 +58,17 @@ export default function PlanPage() {
   const [addingGroup, setAddingGroup] = useState(false);
   const [newGroupName, setNewGroupName] = useState('');
 
+  const [showArchived, setShowArchived] = useState(false);
+
 
   const load = useCallback(async () => {
     try {
-      const res = await fetch(`/api/budgets?month=${month}`);
+      const res = await fetch(`/api/budgets?month=${month}${showArchived ? '&includeHidden=true' : ''}`);
       setData(await res.json());
     } catch (e) {
       console.error('Plan load failed:', e);
     }
-  }, [month]);
+  }, [month, showArchived]);
 
   useEffect(() => { load(); }, [load]);
 
@@ -169,6 +173,24 @@ export default function PlanPage() {
     load();
   }
 
+  async function handleRestoreCategory(categoryId: number) {
+    await fetch(`/api/categories/${categoryId}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ is_hidden: false }),
+    });
+    load();
+  }
+
+  async function handleRestoreGroup(groupId: number) {
+    await fetch(`/api/category-groups/${groupId}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ is_hidden: false }),
+    });
+    load();
+  }
+
   async function handleDeleteGroup(groupId: number, name: string, hasCategories: boolean) {
     if (hasCategories) {
       alert(t('plan_delete_group_has_categories'));
@@ -183,9 +205,9 @@ export default function PlanPage() {
 
   const { budgets, allGroups, readyToAssign } = data;
 
-  const groups: Record<string, { name: string; sort: number; rows: BudgetEntry[]; id: number }> = {};
+  const groups: Record<string, { name: string; sort: number; rows: BudgetEntry[]; id: number; isHidden: boolean }> = {};
   for (const g of allGroups) {
-    groups[String(g.id)] = { name: g.name, sort: g.sort_order, rows: [], id: g.id };
+    groups[String(g.id)] = { name: g.name, sort: g.sort_order, rows: [], id: g.id, isHidden: g.is_hidden === 1 };
   }
   for (const b of budgets) {
     const key = String(b.group_id);
@@ -303,7 +325,17 @@ export default function PlanPage() {
             {label}
           </button>
         ))}
-        <button className="ml-auto text-gray-400 hover:text-gray-600">
+        <button
+          onClick={() => setShowArchived(v => !v)}
+          className={`ml-auto flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium border ${
+            showArchived
+              ? 'bg-amber-100 text-amber-700 border-amber-300'
+              : 'bg-white text-gray-500 border-gray-200 hover:bg-gray-50'
+          }`}
+        >
+          <Archive size={12} /> {t('plan_show_archived')}
+        </button>
+        <button className="text-gray-400 hover:text-gray-600">
           <HelpCircle size={16} />
         </button>
       </div>
@@ -352,7 +384,7 @@ export default function PlanPage() {
                   <React.Fragment key={key}>
                     {/* Group header row */}
                     <tr
-                      className="bg-gray-50 border-y border-gray-200 cursor-pointer hover:bg-gray-100 group/grouprow"
+                      className={`border-y border-gray-200 cursor-pointer group/grouprow ${group.isHidden ? 'bg-amber-50 hover:bg-amber-100' : 'bg-gray-50 hover:bg-gray-100'}`}
                       onClick={() => setCollapsed(c => ({ ...c, [key]: !c[key] }))}
                     >
                       <td className="w-8 px-3 py-2">
@@ -361,36 +393,49 @@ export default function PlanPage() {
                           : <ChevronDown size={14} className="text-gray-400" />
                         }
                       </td>
-                      <td className="px-3 py-2 text-xs font-semibold uppercase tracking-wide text-gray-600">
+                      <td className="px-3 py-2 text-xs font-semibold uppercase tracking-wide text-gray-400">
                         <div className="flex items-center gap-2">
-                          {group.name}
-                          <button
-                            onClick={e => {
-                              e.stopPropagation();
-                              setCollapsed(c => ({ ...c, [key]: false }));
-                              setAddingCategoryToGroup(group.id);
-                              setNewCategoryName('');
-                            }}
-                            className="opacity-0 group-hover/grouprow:opacity-100 p-0.5 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded transition-opacity"
-                            title={t('plan_add_category')}
-                          >
-                            <Plus size={13} />
-                          </button>
+                          <span className={group.isHidden ? 'text-amber-600 line-through' : 'text-gray-600'}>{group.name}</span>
+                          {!group.isHidden && (
+                            <button
+                              onClick={e => {
+                                e.stopPropagation();
+                                setCollapsed(c => ({ ...c, [key]: false }));
+                                setAddingCategoryToGroup(group.id);
+                                setNewCategoryName('');
+                              }}
+                              className="opacity-0 group-hover/grouprow:opacity-100 p-0.5 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded transition-opacity"
+                              title={t('plan_add_category')}
+                            >
+                              <Plus size={13} />
+                            </button>
+                          )}
                           <div className="flex items-center gap-0.5 ml-auto">
-                            <button
-                              onClick={e => { e.stopPropagation(); handleArchiveGroup(group.id); }}
-                              className="p-0.5 text-gray-400 hover:text-amber-500 rounded"
-                              title={t('plan_archive')}
-                            >
-                              <Archive size={13} />
-                            </button>
-                            <button
-                              onClick={e => { e.stopPropagation(); handleDeleteGroup(group.id, group.name, group.rows.length > 0); }}
-                              className="p-0.5 text-gray-400 hover:text-red-500 rounded"
-                              title={t('plan_delete')}
-                            >
-                              <Trash2 size={13} />
-                            </button>
+                            {group.isHidden ? (
+                              <button
+                                onClick={e => { e.stopPropagation(); handleRestoreGroup(group.id); }}
+                                className="flex items-center gap-1 px-2 py-0.5 text-xs text-amber-700 bg-amber-100 hover:bg-amber-200 rounded"
+                              >
+                                <RotateCcw size={11} /> {t('plan_restore')}
+                              </button>
+                            ) : (
+                              <>
+                                <button
+                                  onClick={e => { e.stopPropagation(); handleArchiveGroup(group.id); }}
+                                  className="p-0.5 text-gray-400 hover:text-amber-500 rounded"
+                                  title={t('plan_archive')}
+                                >
+                                  <Archive size={13} />
+                                </button>
+                                <button
+                                  onClick={e => { e.stopPropagation(); handleDeleteGroup(group.id, group.name, group.rows.length > 0); }}
+                                  className="p-0.5 text-gray-400 hover:text-red-500 rounded"
+                                  title={t('plan_delete')}
+                                >
+                                  <Trash2 size={13} />
+                                </button>
+                              </>
+                            )}
                           </div>
                         </div>
                       </td>
@@ -420,8 +465,10 @@ export default function PlanPage() {
                         isSelected={selectedCategoryId === row.category_id}
                         onSelect={() => setSelectedCategoryId(id => id === row.category_id ? null : row.category_id)}
                         onAssignChange={handleAssignChange}
-                        onArchive={() => handleArchiveCategory(row.category_id)}
-                        onDelete={() => handleDeleteCategory(row.category_id, row.category_name)}
+                        isArchived={row.is_hidden === 1}
+                        onRestore={row.is_hidden === 1 ? () => handleRestoreCategory(row.category_id) : undefined}
+                        onArchive={row.is_hidden === 0 ? () => handleArchiveCategory(row.category_id) : undefined}
+                        onDelete={row.is_hidden === 0 ? () => handleDeleteCategory(row.category_id, row.category_name) : undefined}
                       />
                     ))}
 

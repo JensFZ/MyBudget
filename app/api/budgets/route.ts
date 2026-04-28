@@ -8,6 +8,7 @@ export async function GET(req: NextRequest) {
 
   const { searchParams } = new URL(req.url);
   const month = searchParams.get('month') ?? new Date().toISOString().slice(0, 7);
+  const includeHidden = searchParams.get('includeHidden') === 'true';
 
   // First day of the following month — used to include all dates within `month`
   const [yNum, mNum] = month.split('-').map(Number);
@@ -62,18 +63,19 @@ export async function GET(req: NextRequest) {
     FROM categories c
     LEFT JOIN category_groups cg ON c.group_id = cg.id
     LEFT JOIN budgets b ON b.category_id = c.id AND b.month = ?
-    WHERE cg.vault_id = ? AND c.is_hidden = 0 AND cg.is_hidden = 0
+    WHERE cg.vault_id = ? AND (? OR (c.is_hidden = 0 AND cg.is_hidden = 0))
     ORDER BY cg.sort_order, c.sort_order
   `).all(
     `${month}-01`, nextMonth, ctx.vaultId,   // activity: this month only
     month,                                    // cumulative assigned: <= month
     nextMonth, ctx.vaultId,                   // cumulative activity: < nextMonth
-    month, ctx.vaultId                        // JOIN condition + WHERE
+    month, ctx.vaultId,                        // JOIN condition + WHERE vault_id
+    includeHidden ? 1 : 0                      // show hidden flag
   );
 
   const allGroups = db.prepare(
-    'SELECT id, name, sort_order FROM category_groups WHERE vault_id = ? AND is_hidden = 0 ORDER BY sort_order'
-  ).all(ctx.vaultId) as { id: number; name: string; sort_order: number }[];
+    'SELECT id, name, sort_order, is_hidden FROM category_groups WHERE vault_id = ? AND (? OR is_hidden = 0) ORDER BY sort_order'
+  ).all(ctx.vaultId, includeHidden ? 1 : 0) as { id: number; name: string; sort_order: number; is_hidden: number }[];
 
   const accounts = db.prepare(
     "SELECT balance FROM accounts WHERE vault_id = ? AND on_budget = 1 AND type != 'credit'"

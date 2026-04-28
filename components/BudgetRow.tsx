@@ -2,7 +2,7 @@
 
 import { fmt } from '@/lib/format';
 import { useState, useEffect, useRef } from 'react';
-import { Clock, CheckCircle2, Archive, Trash2 } from 'lucide-react';
+import { Clock, CheckCircle2, Archive, Trash2, RotateCcw } from 'lucide-react';
 import { useI18n } from '@/lib/i18n';
 
 interface BudgetRowProps {
@@ -21,12 +21,14 @@ interface BudgetRowProps {
   onAssignChange: (categoryId: number, month: string, value: number) => void;
   onArchive?: () => void;
   onDelete?: () => void;
+  isArchived?: boolean;
+  onRestore?: () => void;
 }
 
 export default function BudgetRow({
   categoryId, name, color, assigned, activity, available,
   isGoal, goalAmount, goalType, month,
-  isSelected, onSelect, onAssignChange, onArchive, onDelete,
+  isSelected, onSelect, onAssignChange, onArchive, onDelete, isArchived, onRestore,
 }: BudgetRowProps) {
   const { t } = useI18n();
   const [editing, setEditing] = useState(false);
@@ -87,7 +89,7 @@ export default function BudgetRow({
 
   return (
     <tr
-      className={`border-b border-gray-100 cursor-pointer group transition-colors ${isSelected ? 'bg-blue-50' : 'hover:bg-gray-50'}`}
+      className={`border-b border-gray-100 cursor-pointer group transition-colors ${isArchived ? 'bg-amber-50 opacity-60' : isSelected ? 'bg-blue-50' : 'hover:bg-gray-50'}`}
       onClick={onSelect}
     >
       {/* Selection indicator */}
@@ -102,23 +104,34 @@ export default function BudgetRow({
           />
           <div className={`text-sm flex-1 ${isSelected ? 'text-blue-700 font-medium' : 'text-gray-800'}`}>{name}</div>
           <div className="flex items-center gap-0.5 ml-1">
-            {onArchive && (
+            {isArchived && onRestore ? (
               <button
-                onClick={e => { e.stopPropagation(); onArchive(); }}
-                className="p-0.5 text-gray-400 hover:text-amber-500 rounded"
-                title={t('plan_archive')}
+                onClick={e => { e.stopPropagation(); onRestore(); }}
+                className="flex items-center gap-1 px-2 py-0.5 text-xs text-amber-700 bg-amber-100 hover:bg-amber-200 rounded"
               >
-                <Archive size={12} />
+                <RotateCcw size={11} /> {t('plan_restore')}
               </button>
-            )}
-            {onDelete && (
-              <button
-                onClick={e => { e.stopPropagation(); onDelete(); }}
-                className="p-0.5 text-gray-400 hover:text-red-500 rounded"
-                title={t('plan_delete')}
-              >
-                <Trash2 size={12} />
-              </button>
+            ) : (
+              <>
+                {onArchive && (
+                  <button
+                    onClick={e => { e.stopPropagation(); onArchive(); }}
+                    className="p-0.5 text-gray-400 hover:text-amber-500 rounded"
+                    title={t('plan_archive')}
+                  >
+                    <Archive size={12} />
+                  </button>
+                )}
+                {onDelete && (
+                  <button
+                    onClick={e => { e.stopPropagation(); onDelete(); }}
+                    className="p-0.5 text-gray-400 hover:text-red-500 rounded"
+                    title={t('plan_delete')}
+                  >
+                    <Trash2 size={12} />
+                  </button>
+                )}
+              </>
             )}
           </div>
         </div>
