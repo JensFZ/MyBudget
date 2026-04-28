@@ -93,6 +93,10 @@ export default function AccountPage({ params }: { params: Promise<{ id: string }
     }).catch(() => {});
   }, [loadAccount, loadTransactions]);
 
+  function notifySidebar() {
+    window.dispatchEvent(new CustomEvent('accounts-updated'));
+  }
+
   async function handleNewSaved(data: SaveData) {
     await fetch('/api/transactions', {
       method: 'POST',
@@ -102,6 +106,7 @@ export default function AccountPage({ params }: { params: Promise<{ id: string }
     setAddingNew(false);
     loadAccount();
     loadTransactions();
+    notifySidebar();
   }
 
   async function handleSave(txId: number, data: SaveData) {
@@ -120,12 +125,14 @@ export default function AccountPage({ params }: { params: Promise<{ id: string }
     });
     loadAccount();
     loadTransactions();
+    notifySidebar();
   }
 
   async function handleDelete(txId: number) {
     await fetch(`/api/transactions/${txId}`, { method: 'DELETE' });
     loadAccount();
     loadTransactions();
+    notifySidebar();
   }
 
   async function handleBulkDelete(ids: number[]) {
@@ -136,6 +143,7 @@ export default function AccountPage({ params }: { params: Promise<{ id: string }
     });
     loadAccount();
     loadTransactions();
+    notifySidebar();
   }
 
   async function handleToggleCleared(txId: number, cleared: number) {
