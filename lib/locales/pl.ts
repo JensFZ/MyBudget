@@ -80,6 +80,9 @@ const t: TranslationSet = {
   plan_col_available: 'Dostępne',
   plan_rename: 'Zmień nazwę',
   plan_show_archived: 'Pokaż zarchiwizowane',
+  plan_bulk_scope_all: 'Wszystkie kategorie',
+  plan_bulk_scope_unfunded: 'Tylko puste',
+  plan_bulk_done: '{count} uzupełniono',
   plan_restore: 'Przywróć',
   plan_archive: 'Archiwizuj',
   plan_delete: 'Usuń',
@@ -87,6 +90,7 @@ const t: TranslationSet = {
   plan_delete_confirm_group: 'Usunąć grupę „{name}"?',
   plan_delete_has_transactions: 'Ta kategoria ma transakcje i nie może być usunięta. Zamiast tego zarchiwizuj ją.',
   plan_delete_group_has_categories: 'Ta grupa zawiera jeszcze kategorie. Najpierw usuń lub zarchiwizuj wszystkie kategorie.',
+  plan_ok: 'OK',
 
   // BudgetRow
   budget_overspent_sub: 'Przekroczono. {abs} z {assigned}',
@@ -245,6 +249,8 @@ const t: TranslationSet = {
 
   // Reflect page
   reflect_title: 'Analiza',
+  reflect_from: 'Od',
+  reflect_to: 'Do',
   reflect_loading: 'Ładowanie...',
   reflect_net_worth: 'Majątek netto',
   reflect_assets: 'Aktywa',

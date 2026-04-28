@@ -80,6 +80,9 @@ const t: TranslationSet = {
   plan_col_available: 'Available',
   plan_rename: 'Rename',
   plan_show_archived: 'Show archived',
+  plan_bulk_scope_all: 'All categories',
+  plan_bulk_scope_unfunded: 'Unfunded only',
+  plan_bulk_done: '{count} filled',
   plan_restore: 'Restore',
   plan_archive: 'Archive',
   plan_delete: 'Delete',
@@ -87,6 +90,7 @@ const t: TranslationSet = {
   plan_delete_confirm_group: 'Delete group "{name}"?',
   plan_delete_has_transactions: 'This category has transactions and cannot be deleted. Archive it instead.',
   plan_delete_group_has_categories: 'This group still has categories. Delete or archive all categories first.',
+  plan_ok: 'OK',
 
   // BudgetRow
   budget_overspent_sub: 'Overspent. {abs} of {assigned}',
@@ -245,6 +249,8 @@ const t: TranslationSet = {
 
   // Reflect page
   reflect_title: 'Reflect',
+  reflect_from: 'From',
+  reflect_to: 'To',
   reflect_loading: 'Loading...',
   reflect_net_worth: 'Net Worth',
   reflect_assets: 'Assets',

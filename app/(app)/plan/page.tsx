@@ -4,6 +4,8 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { fmt } from '@/lib/format';
 import { useI18n } from '@/lib/i18n';
 import { ChevronDown, ChevronRight, Plus, X, HelpCircle, RotateCcw, RotateCw, Archive, Trash2, Pencil } from 'lucide-react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
 import BudgetRow from '@/components/BudgetRow';
 import PlanRightPanel from '@/components/PlanRightPanel';
 
@@ -61,6 +63,10 @@ export default function PlanPage() {
   const [showArchived, setShowArchived] = useState(false);
   const [renamingGroupId, setRenamingGroupId] = useState<number | null>(null);
   const [renamingGroupName, setRenamingGroupName] = useState('');
+
+  // Modal state
+  const [alertMessage, setAlertMessage] = useState<string | null>(null);
+  const [confirmDialog, setConfirmDialog] = useState<{ message: string; onConfirm: () => void } | null>(null);
 
 
   const load = useCallback(async () => {
@@ -156,14 +162,18 @@ export default function PlanPage() {
     load();
   }
 
-  async function handleDeleteCategory(categoryId: number, name: string) {
-    if (!window.confirm(t('plan_delete_confirm_category', { name }))) return;
-    const res = await fetch(`/api/categories/${categoryId}`, { method: 'DELETE' });
-    if (res.status === 409) {
-      alert(t('plan_delete_has_transactions'));
-      return;
-    }
-    load();
+  function handleDeleteCategory(categoryId: number, name: string) {
+    setConfirmDialog({
+      message: t('plan_delete_confirm_category', { name }),
+      onConfirm: async () => {
+        const res = await fetch(`/api/categories/${categoryId}`, { method: 'DELETE' });
+        if (res.status === 409) {
+          setAlertMessage(t('plan_delete_has_transactions'));
+          return;
+        }
+        load();
+      },
+    });
   }
 
   async function handleArchiveGroup(groupId: number) {
@@ -211,14 +221,18 @@ export default function PlanPage() {
     load();
   }
 
-  async function handleDeleteGroup(groupId: number, name: string, hasCategories: boolean) {
+  function handleDeleteGroup(groupId: number, name: string, hasCategories: boolean) {
     if (hasCategories) {
-      alert(t('plan_delete_group_has_categories'));
+      setAlertMessage(t('plan_delete_group_has_categories'));
       return;
     }
-    if (!window.confirm(t('plan_delete_confirm_group', { name }))) return;
-    await fetch(`/api/category-groups/${groupId}`, { method: 'DELETE' });
-    load();
+    setConfirmDialog({
+      message: t('plan_delete_confirm_group', { name }),
+      onConfirm: async () => {
+        await fetch(`/api/category-groups/${groupId}`, { method: 'DELETE' });
+        load();
+      },
+    });
   }
 
   if (!data) return <div className="p-8 text-center text-gray-400">{t('plan_loading')}</div>;
@@ -317,7 +331,6 @@ export default function PlanPage() {
             <div>
               <div className="text-white/80 text-xs">{t('plan_ready_to_assign')}</div>
             </div>
-            <ChevronDown size={16} className="text-white/70" />
           </div>
         </div>
       </div>
@@ -371,12 +384,6 @@ export default function PlanPage() {
             </button>
             <button className="p-1 text-gray-400 hover:text-gray-700"><RotateCcw size={14} /></button>
             <button className="p-1 text-gray-400 hover:text-gray-700"><RotateCw size={14} /></button>
-            <button
-              onClick={() => { setAddingGroup(true); setNewGroupName(''); }}
-              className="ml-auto flex items-center gap-1 bg-blue-600 text-white text-sm rounded-lg px-3 py-1.5 hover:bg-blue-700"
-            >
-              <Plus size={14} /> {t('plan_add_group')}
-            </button>
           </div>
 
           {/* Budget table */}
@@ -384,9 +391,7 @@ export default function PlanPage() {
           <table className="w-full border-collapse min-w-[500px]">
             <thead>
               <tr className="bg-gray-50 border-b border-gray-200 text-xs font-semibold text-gray-500 uppercase tracking-wide sticky top-[41px] z-10">
-                <th className="w-8 px-3 py-2">
-                  <input type="checkbox" className="rounded border-gray-300" />
-                </th>
+                <th className="w-8 px-3 py-2" />
                 <th className="px-3 py-2 text-left">{t('plan_col_category')}</th>
                 <th className="px-3 py-2 text-right w-36">{t('plan_col_assigned')}</th>
                 <th className="px-3 py-2 text-right w-36">{t('plan_col_activity')}</th>
@@ -516,7 +521,7 @@ export default function PlanPage() {
                     ))}
 
                     {/* Inline new-category row */}
-                    {isAddingHere ? (
+                    {isAddingHere && (
                       <tr className="border-b border-blue-100 bg-blue-50">
                         <td className="w-8 px-3 py-1.5" />
                         <td className="px-3 py-1.5" colSpan={4}>
@@ -532,22 +537,6 @@ export default function PlanPage() {
                             }}
                             onBlur={() => handleAddCategory(group.id)}
                           />
-                        </td>
-                      </tr>
-                    ) : (
-                      <tr className="border-b border-gray-100">
-                        <td className="w-8 px-3 py-1" />
-                        <td className="px-3 py-1" colSpan={4}>
-                          <button
-                            onClick={() => {
-                              setCollapsed(c => ({ ...c, [key]: false }));
-                              setAddingCategoryToGroup(group.id);
-                              setNewCategoryName('');
-                            }}
-                            className="flex items-center gap-1 text-xs text-gray-400 hover:text-blue-600"
-                          >
-                            <Plus size={12} /> {t('plan_add_category')}
-                          </button>
                         </td>
                       </tr>
                     )}
@@ -603,9 +592,39 @@ export default function PlanPage() {
           onColorChange={handleColorChange}
           onGoalChange={handleGoalChange}
           onGoalDateChange={handleGoalDateChange}
+          onBulkAssign={load}
         />
       </div>
 
+      {/* Alert modal */}
+      <Dialog open={alertMessage !== null} onOpenChange={open => { if (!open) setAlertMessage(null); }}>
+        <DialogContent showCloseButton={false}>
+          <DialogHeader>
+            <DialogDescription>{alertMessage}</DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button onClick={() => setAlertMessage(null)}>{t('plan_ok')}</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Confirm modal */}
+      <Dialog open={confirmDialog !== null} onOpenChange={open => { if (!open) setConfirmDialog(null); }}>
+        <DialogContent showCloseButton={false}>
+          <DialogHeader>
+            <DialogDescription>{confirmDialog?.message}</DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setConfirmDialog(null)}>{t('settings_cancel')}</Button>
+            <Button
+              variant="destructive"
+              onClick={() => { const fn = confirmDialog?.onConfirm; setConfirmDialog(null); fn?.(); }}
+            >
+              {t('plan_delete')}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

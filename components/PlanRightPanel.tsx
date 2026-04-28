@@ -30,6 +30,8 @@ interface MonthStats {
   spent: number;
 }
 
+type BulkSource = 'last_assigned' | 'avg_assigned' | 'last_spent' | 'avg_spent';
+
 interface Props {
   month: string;
   budgets: BudgetEntry[];
@@ -40,6 +42,7 @@ interface Props {
   onColorChange: (categoryId: number, color: string | null) => void;
   onGoalChange: (categoryId: number, goalAmount: number | null) => void;
   onGoalDateChange: (categoryId: number, goalDate: string | null) => void;
+  onBulkAssign: () => void;
 }
 
 function shiftMonth(month: string, delta: number): string {
@@ -55,7 +58,7 @@ function sumStats(budgets: BudgetEntry[]): MonthStats {
   };
 }
 
-export default function PlanRightPanel({ month, budgets, readyToAssign, selectedCategory, onDeselect, onAssignChange, onColorChange, onGoalChange, onGoalDateChange }: Props) {
+export default function PlanRightPanel({ month, budgets, readyToAssign, selectedCategory, onDeselect, onAssignChange, onColorChange, onGoalChange, onGoalDateChange, onBulkAssign }: Props) {
   const { t, tMonthLong } = useI18n();
   const [, mm] = month.split('-');
   const monthName = tMonthLong(Number(mm) - 1);
@@ -93,9 +96,6 @@ export default function PlanRightPanel({ month, budgets, readyToAssign, selected
   const totalAssigned = budgets.reduce((s, b) => s + b.assigned, 0);
   const totalActivity = budgets.reduce((s, b) => s + b.activity, 0);
   const totalAvailable = budgets.reduce((s, b) => s + b.available, 0);
-  const underfunded = budgets
-    .filter(b => b.goal_amount && b.available < b.goal_amount)
-    .reduce((s, b) => s + ((b.goal_amount ?? 0) - Math.max(0, b.available)), 0);
 
   const lastMonth = monthHistory[0] ?? null;
   const avgAssigned = monthHistory.length > 0 ? monthHistory.reduce((s, h) => s + h.assigned, 0) / monthHistory.length : null;
@@ -116,6 +116,22 @@ export default function PlanRightPanel({ month, budgets, readyToAssign, selected
   const [autoAssignOpen, setAutoAssignOpen] = useState(false);
   const [goalInput, setGoalInput] = useState('');
   const [goalDateInput, setGoalDateInput] = useState('');
+
+  const [bulkOpen, setBulkOpen] = useState(false);
+  const [bulkScope, setBulkScope] = useState<'all' | 'unfunded'>('unfunded');
+  const [bulkLoading, setBulkLoading] = useState(false);
+
+  async function handleBulkAssign(source: BulkSource) {
+    setBulkLoading(true);
+    await fetch('/api/budgets/bulk-assign', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ month, source, scope: bulkScope }),
+    });
+    setBulkLoading(false);
+    setBulkOpen(false);
+    onBulkAssign();
+  }
 
   const assign = useCallback((value: number) => {
     if (!selectedCategory) return;
@@ -411,49 +427,64 @@ export default function PlanRightPanel({ month, budgets, readyToAssign, selected
           </div>
         </div>
 
-        <div className="border-t pt-4 mb-4">
-          <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">
-            {t('panel_cost_to_be_me')}
-          </p>
-          <div className="flex justify-between text-sm">
-            <span className="text-gray-500">{t('panel_targets', { month: monthName })}</span>
-            <span className="font-medium tabular-nums text-gray-800">{fmt(underfunded)}</span>
-          </div>
-          <button className="mt-3 w-full flex items-center justify-between bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-500 hover:bg-gray-100">
-            <span>{t('panel_enter_income')}</span>
-            <span>→</span>
-          </button>
-        </div>
-
         <div className="border-t pt-4">
-          <button className="flex items-center gap-2 w-full bg-blue-600 text-white rounded-lg px-3 py-2 text-sm font-medium hover:bg-blue-700 mb-3">
-            <Zap size={14} />
-            {t('panel_auto_assign')}
-            <ChevronDown size={14} className="ml-auto" />
-          </button>
-
           <div className="space-y-2.5 text-sm">
-            <div className="border-t border-gray-100 pt-2.5 space-y-2.5">
-              <StatRow label={t('panel_assigned_last_month')} value={lastMonth?.assigned ?? null} loading={monthHistoryLoading} />
-              <StatRow label={t('panel_spent_last_month')} value={lastMonth?.spent ?? null} red loading={monthHistoryLoading} />
-            </div>
-
+            <StatRow label={t('panel_assigned_last_month')} value={lastMonth?.assigned ?? null} loading={monthHistoryLoading} />
+            <StatRow label={t('panel_spent_last_month')} value={lastMonth?.spent ?? null} red loading={monthHistoryLoading} />
             <div className="border-t border-gray-100 pt-2.5 space-y-2.5">
               <StatRow label={t('panel_average_assigned')} value={avgAssigned} loading={monthHistoryLoading} />
               <StatRow label={t('panel_average_spent')} value={avgSpent} red loading={monthHistoryLoading} />
             </div>
           </div>
+        </div>
 
-          <div className="mt-4 space-y-2">
-            <button className="w-full flex items-center justify-between bg-gray-50 border border-gray-200 rounded-lg px-3 py-1.5 text-xs text-gray-600 hover:bg-gray-100">
-              <span>{t('panel_reduce_overfunding')}</span>
-              <span className="font-medium tabular-nums">{fmt(0)}</span>
-            </button>
-            <button className="w-full flex items-center justify-between bg-gray-50 border border-gray-200 rounded-lg px-3 py-1.5 text-xs text-gray-600 hover:bg-gray-100">
-              <span>{t('panel_reset_available')}</span>
-              <span className="font-medium tabular-nums">{fmt(0)}</span>
-            </button>
-          </div>
+        {/* Bulk Auto-Assign */}
+        <div className="border-t pt-4">
+          <button
+            onClick={() => setBulkOpen(v => !v)}
+            className="flex items-center gap-2 w-full bg-blue-600 text-white rounded-lg px-3 py-2 text-sm font-medium hover:bg-blue-700"
+          >
+            <Zap size={14} />
+            {t('panel_auto_assign')}
+            {bulkOpen ? <ChevronUp size={14} className="ml-auto" /> : <ChevronDown size={14} className="ml-auto" />}
+          </button>
+
+          {bulkOpen && (
+            <div className="mt-2">
+              {/* Scope toggle */}
+              <div className="flex rounded-lg border border-gray-200 overflow-hidden text-xs mb-2">
+                {(['unfunded', 'all'] as const).map((s, i) => (
+                  <button
+                    key={s}
+                    onClick={() => setBulkScope(s)}
+                    className={`flex-1 py-1.5 font-medium transition-colors ${i > 0 ? 'border-l border-gray-200' : ''} ${bulkScope === s ? 'bg-blue-50 text-blue-700' : 'text-gray-500 hover:bg-gray-50'}`}
+                  >
+                    {s === 'all' ? t('plan_bulk_scope_all') : t('plan_bulk_scope_unfunded')}
+                  </button>
+                ))}
+              </div>
+
+              {/* Source options */}
+              <div className="border border-gray-200 rounded-lg overflow-hidden text-sm">
+                {([
+                  { key: 'last_assigned' as BulkSource, label: t('panel_assigned_last_month') },
+                  { key: 'last_spent' as BulkSource, label: t('panel_spent_last_month') },
+                  { key: 'avg_assigned' as BulkSource, label: t('panel_average_assigned') },
+                  { key: 'avg_spent' as BulkSource, label: t('panel_average_spent') },
+                ]).map((opt, i, arr) => (
+                  <button
+                    key={opt.key}
+                    onClick={() => handleBulkAssign(opt.key)}
+                    disabled={bulkLoading}
+                    className={`w-full flex items-center justify-between px-3 py-2.5 text-left transition-colors ${i < arr.length - 1 ? 'border-b border-gray-100' : ''} ${bulkLoading ? 'opacity-40 cursor-default' : 'hover:bg-blue-50'}`}
+                  >
+                    <span className="text-gray-700">{opt.label}</span>
+                    {bulkLoading && <Loader2 size={12} className="animate-spin text-gray-300" />}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </aside>

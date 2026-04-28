@@ -80,6 +80,9 @@ const t: TranslationSet = {
   plan_col_available: 'Verfügbar',
   plan_rename: 'Umbenennen',
   plan_show_archived: 'Archivierte anzeigen',
+  plan_bulk_scope_all: 'Alle Kategorien',
+  plan_bulk_scope_unfunded: 'Nur leere',
+  plan_bulk_done: '{count} befüllt',
   plan_restore: 'Reaktivieren',
   plan_archive: 'Archivieren',
   plan_delete: 'Löschen',
@@ -87,6 +90,7 @@ const t: TranslationSet = {
   plan_delete_confirm_group: 'Gruppe „{name}" wirklich löschen?',
   plan_delete_has_transactions: 'Diese Kategorie hat Transaktionen und kann nicht gelöscht werden. Archiviere sie stattdessen.',
   plan_delete_group_has_categories: 'Diese Gruppe enthält noch Kategorien. Lösche oder archiviere zuerst alle Kategorien.',
+  plan_ok: 'OK',
 
   // BudgetRow
   budget_overspent_sub: 'Überzogen. {abs} von {assigned}',
@@ -245,6 +249,8 @@ const t: TranslationSet = {
 
   // Reflect page
   reflect_title: 'Überblick',
+  reflect_from: 'Von',
+  reflect_to: 'Bis',
   reflect_loading: 'Lade...',
   reflect_net_worth: 'Nettovermögen',
   reflect_assets: 'Vermögen',
