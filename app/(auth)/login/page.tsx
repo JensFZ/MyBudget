@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { ShieldCheck, Eye, EyeOff, Lock } from 'lucide-react';
+import Link from 'next/link';
 
 export default function LoginPage() {
   const router = useRouter();
@@ -174,6 +175,13 @@ export default function LoginPage() {
             </>
           )}
         </div>
+
+        <p className="text-center text-sm text-gray-500 mt-5">
+          Noch kein Konto?{' '}
+          <Link href="/register" className="text-blue-600 hover:text-blue-700 font-medium">
+            Registrieren
+          </Link>
+        </p>
       </div>
     </div>
   );
