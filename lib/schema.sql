@@ -1,7 +1,7 @@
 CREATE TABLE IF NOT EXISTS accounts (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   name TEXT NOT NULL,
-  type TEXT NOT NULL CHECK(type IN ('cash', 'credit', 'tracking', 'closed')),
+  type TEXT NOT NULL CHECK(type IN ('cash', 'checking', 'savings', 'credit', 'tracking', 'closed')),
   balance REAL DEFAULT 0,
   on_budget INTEGER DEFAULT 1,
   created_at TEXT DEFAULT (datetime('now'))

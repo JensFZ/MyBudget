@@ -69,6 +69,33 @@ for (const sql of migrations) {
   try { db.exec(sql); } catch { /* already exists */ }
 }
 
+// One-time migration: extend accounts CHECK constraint to include 'checking' and 'savings'.
+// Guarded by app_config so it only runs once regardless of how many times the server starts.
+const accountsTypeMigrated = db.prepare("SELECT value FROM app_config WHERE key = 'accounts_type_v2'").get();
+if (!accountsTypeMigrated) {
+  db.pragma('foreign_keys = OFF');
+  db.exec(`
+    BEGIN;
+    CREATE TABLE accounts_new (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      name TEXT NOT NULL,
+      type TEXT NOT NULL CHECK(type IN ('cash', 'checking', 'savings', 'credit', 'tracking', 'closed')),
+      balance REAL DEFAULT 0,
+      on_budget INTEGER DEFAULT 1,
+      created_at TEXT DEFAULT (datetime('now')),
+      starred INTEGER DEFAULT 0,
+      vault_id INTEGER REFERENCES vaults(id),
+      archived INTEGER DEFAULT 0
+    );
+    INSERT INTO accounts_new SELECT id, name, type, balance, on_budget, created_at, starred, vault_id, archived FROM accounts;
+    DROP TABLE accounts;
+    ALTER TABLE accounts_new RENAME TO accounts;
+    INSERT OR IGNORE INTO app_config (key, value) VALUES ('accounts_type_v2', '1');
+    COMMIT;
+  `);
+  db.pragma('foreign_keys = ON');
+}
+
 // Generate and persist JWT secret on first run
 const existingSecret = db.prepare('SELECT value FROM app_config WHERE key = ?').get('jwt_secret') as { value: string } | undefined;
 if (!existingSecret) {
