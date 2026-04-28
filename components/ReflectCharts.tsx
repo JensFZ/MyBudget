@@ -2,7 +2,7 @@
 
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend,
-  ComposedChart, Line, Area, AreaChart, ResponsiveContainer,
+  ComposedChart, Line, ResponsiveContainer,
 } from 'recharts';
 import { fmt } from '@/lib/format';
 
@@ -15,7 +15,6 @@ const MONTHS_DE: Record<string, string> = {
 interface Props {
   monthly: { month: string; income: number; spending: number }[];
   netWorth: number;
-  ageOfMoney: number;
 }
 
 const eurFormatter = (v: number | string | undefined) =>
@@ -27,11 +26,6 @@ export default function ReflectCharts({ monthly, netWorth }: Props) {
     Einnahmen: Math.round(d.income),
     Ausgaben: Math.round(d.spending),
     Nettovermögen: Math.round(netWorth * (0.9 + i * 0.025)),
-  }));
-
-  const ageData = monthly.map((d, i) => ({
-    name: MONTHS_DE[d.month.slice(5)] ?? d.month,
-    Tage: 90 + i * 8,
   }));
 
   return (
@@ -66,25 +60,6 @@ export default function ReflectCharts({ monthly, netWorth }: Props) {
             <Bar yAxisId="left" dataKey="Ausgaben" fill="#90CAF9" radius={[3, 3, 0, 0]} />
             <Line yAxisId="right" type="monotone" dataKey="Nettovermögen" stroke="#1976D2" strokeWidth={2} dot={false} />
           </ComposedChart>
-        </ResponsiveContainer>
-      </div>
-
-      {/* Age of Money chart */}
-      <div className="bg-white px-4 py-5 border-b">
-        <p className="text-xs text-gray-500 uppercase tracking-wide mb-1">Age of Money Verlauf</p>
-        <ResponsiveContainer width="100%" height={150}>
-          <AreaChart data={ageData} margin={{ top: 5, right: 5, left: 5, bottom: 5 }}>
-            <defs>
-              <linearGradient id="ageGrad" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="5%" stopColor="#4CAF50" stopOpacity={0.3} />
-                <stop offset="95%" stopColor="#4CAF50" stopOpacity={0} />
-              </linearGradient>
-            </defs>
-            <XAxis dataKey="name" tick={{ fontSize: 11 }} axisLine={false} tickLine={false} />
-            <YAxis tick={{ fontSize: 10 }} axisLine={false} tickLine={false} />
-            <Tooltip />
-            <Area type="monotone" dataKey="Tage" stroke="#4CAF50" fill="url(#ageGrad)" strokeWidth={2} />
-          </AreaChart>
         </ResponsiveContainer>
       </div>
     </div>

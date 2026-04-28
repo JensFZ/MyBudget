@@ -12,7 +12,6 @@ interface StatsData {
   netWorth: number;
   assets: number;
   debts: number;
-  ageOfMoney: number;
 }
 
 export default function ReflectPage() {
@@ -49,21 +48,9 @@ export default function ReflectPage() {
           </div>
         </div>
 
-        {/* Age of Money */}
-        <div className="bg-white rounded-xl border border-gray-200 p-6">
-          <p className="text-xs text-gray-500 uppercase tracking-wide mb-1">{t('reflect_age_of_money')}</p>
-          <p className="text-4xl font-bold text-gray-900">
-            {stats.ageOfMoney}{' '}
-            <span className="text-xl font-normal text-gray-400">{t('reflect_age_days')}</span>
-          </p>
-          <p className="text-sm text-gray-400 mt-2">
-            {t('reflect_age_desc')}
-          </p>
-        </div>
-
         {/* Charts */}
         <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
-          <Charts monthly={stats.monthly} netWorth={stats.netWorth} ageOfMoney={stats.ageOfMoney} />
+          <Charts monthly={stats.monthly} netWorth={stats.netWorth} />
         </div>
       </div>
     </div>
