@@ -36,6 +36,7 @@ export default function TransactionForm({ open, onClose, onSaved }: TransactionF
   const [amount, setAmount] = useState('0');
   const [isExpense, setIsExpense] = useState(true);
   const [showCatSheet, setShowCatSheet] = useState(false);
+  const [frequency, setFrequency] = useState('never');
 
   useEffect(() => {
     if (!open) return;
@@ -86,11 +87,30 @@ export default function TransactionForm({ open, onClose, onSaved }: TransactionF
         cleared: cleared ? 1 : 0,
       }),
     });
+
+    if (frequency !== 'never') {
+      await fetch('/api/scheduled-transactions', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          account_id: accountId,
+          category_id: categoryId,
+          date,
+          amount: finalAmount,
+          memo,
+          payee,
+          frequency,
+          cleared: cleared ? 1 : 0,
+        }),
+      });
+    }
+
     onSaved();
     onClose();
     setAmount('0');
     setMemo('');
     setPayee('');
+    setFrequency('never');
   }
 
   const selectedAccount = accounts.find(a => a.id === accountId);
@@ -175,6 +195,28 @@ export default function TransactionForm({ open, onClose, onSaved }: TransactionF
                   value={memo}
                   onChange={e => setMemo(e.target.value)}
                 />
+              </div>
+              <div className="flex justify-between items-center py-2 border-b border-gray-100">
+                <span className="text-sm text-gray-500">Wiederholung</span>
+                <select
+                  className="text-sm text-right outline-none bg-transparent text-gray-800"
+                  value={frequency}
+                  onChange={e => setFrequency(e.target.value)}
+                >
+                  <option value="never">Einmalig</option>
+                  <option value="daily">Täglich</option>
+                  <option value="weekly">Wöchentlich</option>
+                  <option value="every_other_week">Alle zwei Wochen</option>
+                  <option value="twice_a_month">Zweimal im Monat</option>
+                  <option value="every_4_weeks">Alle 4 Wochen</option>
+                  <option value="monthly">Monatlich</option>
+                  <option value="every_other_month">Alle zwei Monate</option>
+                  <option value="every_3_months">Alle 3 Monate</option>
+                  <option value="every_4_months">Alle 4 Monate</option>
+                  <option value="twice_a_year">Zweimal im Jahr</option>
+                  <option value="yearly">Jährlich</option>
+                  <option value="every_other_year">Alle zwei Jahre</option>
+                </select>
               </div>
               <div className="flex justify-between items-center py-2">
                 <span className="text-sm text-gray-500">Gebucht</span>

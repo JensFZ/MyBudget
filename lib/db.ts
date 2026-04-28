@@ -64,6 +64,20 @@ const migrations: string[] = [
   `ALTER TABLE categories ADD COLUMN goal_date TEXT`,
   `ALTER TABLE categories ADD COLUMN is_hidden INTEGER DEFAULT 0`,
   `ALTER TABLE category_groups ADD COLUMN is_hidden INTEGER DEFAULT 0`,
+  `CREATE TABLE IF NOT EXISTS scheduled_transactions (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    account_id INTEGER NOT NULL REFERENCES accounts(id),
+    category_id INTEGER REFERENCES categories(id),
+    payee TEXT,
+    memo TEXT,
+    amount REAL NOT NULL,
+    frequency TEXT NOT NULL,
+    next_date TEXT NOT NULL,
+    cleared INTEGER DEFAULT 0,
+    flag TEXT,
+    vault_id INTEGER REFERENCES vaults(id),
+    created_at TEXT DEFAULT (datetime('now'))
+  )`,
 ];
 for (const sql of migrations) {
   try { db.exec(sql); } catch { /* already exists */ }

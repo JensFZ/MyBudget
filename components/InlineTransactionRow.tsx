@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef, useEffect, KeyboardEvent } from 'react';
+import { useState, useRef, useEffect, KeyboardEvent, Fragment } from 'react';
 import { Check, X, Trash2 } from 'lucide-react';
 import { useI18n } from '@/lib/i18n';
 import { fmt2, evalAmount } from '@/lib/format';
@@ -99,6 +99,7 @@ export default function InlineTransactionRow({
   const [outflow, setOutflow] = useState(initAmount < 0 ? Math.abs(initAmount).toFixed(2).replace('.', ',') : '');
   const [inflow, setInflow] = useState(initAmount > 0 ? initAmount.toFixed(2).replace('.', ',') : '');
   const [cleared, setCleared] = useState(initial?.cleared ?? 0);
+  const [frequency, setFrequency] = useState('never');
   const [saving, setSaving] = useState(false);
 
   const firstInputRef = useRef<HTMLInputElement>(null);
@@ -148,6 +149,23 @@ export default function InlineTransactionRow({
         cleared,
         flag: null,
       });
+
+      if (frequency !== 'never' && !transfer_account_id) {
+        await fetch('/api/scheduled-transactions', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            account_id: Number(accountId),
+            category_id,
+            date,
+            amount,
+            payee: payee || null,
+            memo: memo || null,
+            frequency,
+            cleared,
+          }),
+        });
+      }
     } finally {
       setSaving(false);
     }
@@ -155,8 +173,11 @@ export default function InlineTransactionRow({
 
   const inputCls = 'w-full bg-transparent border-b border-blue-300 outline-none text-sm px-1 py-0.5 focus:border-blue-500';
 
+  const colSpan = showAccount ? 10 : 9;
+
   return (
-    <tr className="bg-blue-50 border-b border-blue-200">
+    <Fragment>
+    <tr className="bg-blue-50">
       {/* Checkbox */}
       <td className="w-8 px-3 py-1.5" />
       {/* Cleared dot */}
@@ -316,5 +337,34 @@ export default function InlineTransactionRow({
         </div>
       </td>
     </tr>
+
+    {/* Frequency row */}
+    <tr className="bg-blue-50 border-b border-blue-200">
+      <td colSpan={colSpan} className="px-3 pb-2 pt-0">
+        <div className="flex items-center gap-2">
+          <span className="text-xs text-gray-400">{t('inline_frequency_label')}</span>
+          <select
+            className="text-xs bg-white border border-blue-200 rounded px-1.5 py-0.5 outline-none focus:border-blue-400 text-gray-700"
+            value={frequency}
+            onChange={e => setFrequency(e.target.value)}
+          >
+            <option value="never">{t('recurring_never')}</option>
+            <option value="daily">{t('recurring_daily')}</option>
+            <option value="weekly">{t('recurring_weekly')}</option>
+            <option value="every_other_week">{t('recurring_every_other_week')}</option>
+            <option value="twice_a_month">{t('recurring_twice_a_month')}</option>
+            <option value="every_4_weeks">{t('recurring_every_4_weeks')}</option>
+            <option value="monthly">{t('recurring_monthly')}</option>
+            <option value="every_other_month">{t('recurring_every_other_month')}</option>
+            <option value="every_3_months">{t('recurring_every_3_months')}</option>
+            <option value="every_4_months">{t('recurring_every_4_months')}</option>
+            <option value="twice_a_year">{t('recurring_twice_a_year')}</option>
+            <option value="yearly">{t('recurring_yearly')}</option>
+            <option value="every_other_year">{t('recurring_every_other_year')}</option>
+          </select>
+        </div>
+      </td>
+    </tr>
+    </Fragment>
   );
 }
