@@ -23,8 +23,15 @@ interface BudgetEntry {
   goal_date: string | null;
 }
 
+interface GroupMeta {
+  id: number;
+  name: string;
+  sort_order: number;
+}
+
 interface BudgetData {
   budgets: BudgetEntry[];
+  allGroups: GroupMeta[];
   readyToAssign: number;
   month: string;
 }
@@ -136,13 +143,15 @@ export default function PlanPage() {
 
   if (!data) return <div className="p-8 text-center text-gray-400">{t('plan_loading')}</div>;
 
-  const { budgets, readyToAssign } = data;
+  const { budgets, allGroups, readyToAssign } = data;
 
   const groups: Record<string, { name: string; sort: number; rows: BudgetEntry[]; id: number }> = {};
+  for (const g of allGroups) {
+    groups[String(g.id)] = { name: g.name, sort: g.sort_order, rows: [], id: g.id };
+  }
   for (const b of budgets) {
     const key = String(b.group_id);
-    if (!groups[key]) groups[key] = { name: b.group_name, sort: b.group_sort, rows: [], id: b.group_id };
-    groups[key].rows.push(b);
+    if (groups[key]) groups[key].rows.push(b);
   }
   const sortedGroups = Object.entries(groups).sort((a, b) => a[1].sort - b[1].sort);
   const overspentCount = budgets.filter(b => b.available < 0).length;
@@ -361,7 +370,7 @@ export default function PlanPage() {
                     ))}
 
                     {/* Inline new-category row */}
-                    {isAddingHere && (
+                    {isAddingHere ? (
                       <tr className="border-b border-blue-100 bg-blue-50">
                         <td className="w-8 px-3 py-1.5" />
                         <td className="px-3 py-1.5" colSpan={4}>
@@ -377,6 +386,22 @@ export default function PlanPage() {
                             }}
                             onBlur={() => handleAddCategory(group.id)}
                           />
+                        </td>
+                      </tr>
+                    ) : (
+                      <tr className="border-b border-gray-100">
+                        <td className="w-8 px-3 py-1" />
+                        <td className="px-3 py-1" colSpan={4}>
+                          <button
+                            onClick={() => {
+                              setCollapsed(c => ({ ...c, [key]: false }));
+                              setAddingCategoryToGroup(group.id);
+                              setNewCategoryName('');
+                            }}
+                            className="flex items-center gap-1 text-xs text-gray-400 hover:text-blue-600"
+                          >
+                            <Plus size={12} /> {t('plan_add_category')}
+                          </button>
                         </td>
                       </tr>
                     )}

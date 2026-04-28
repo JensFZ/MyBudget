@@ -71,6 +71,10 @@ export async function GET(req: NextRequest) {
     month, ctx.vaultId                        // JOIN condition + WHERE
   );
 
+  const allGroups = db.prepare(
+    'SELECT id, name, sort_order FROM category_groups WHERE vault_id = ? ORDER BY sort_order'
+  ).all(ctx.vaultId) as { id: number; name: string; sort_order: number }[];
+
   const accounts = db.prepare(
     "SELECT balance FROM accounts WHERE vault_id = ? AND on_budget = 1 AND type != 'credit'"
   ).all(ctx.vaultId) as { balance: number }[];
@@ -81,7 +85,7 @@ export async function GET(req: NextRequest) {
   const totalAvailable = (budgets as { available: number }[]).reduce((s, b) => s + b.available, 0);
   const readyToAssign = totalBalance - totalAvailable;
 
-  return NextResponse.json({ budgets, readyToAssign, month });
+  return NextResponse.json({ budgets, allGroups, readyToAssign, month });
 }
 
 export async function PUT(req: NextRequest) {
