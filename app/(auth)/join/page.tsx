@@ -1,12 +1,20 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Users, Eye, EyeOff, ChevronRight } from 'lucide-react';
 
 type Mode = 'new' | 'existing';
 
 export default function JoinPage() {
+  return (
+    <Suspense>
+      <JoinContent />
+    </Suspense>
+  );
+}
+
+function JoinContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const token = searchParams.get('token') ?? '';
