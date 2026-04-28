@@ -67,3 +67,42 @@ export async function POST(req: NextRequest) {
 
   return NextResponse.json(result, { status: 201 });
 }
+
+export async function DELETE(req: NextRequest) {
+  const ctx = await resolveVault(req);
+  if (!ctx) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+
+  const { ids } = await req.json() as { ids: number[] };
+  if (!Array.isArray(ids) || ids.length === 0) {
+    return NextResponse.json({ error: 'ids required' }, { status: 400 });
+  }
+
+  const deleteTx = db.transaction((txIds: number[]) => {
+    for (const id of txIds) {
+      const tx = db.prepare(`
+        SELECT t.* FROM transactions t
+        JOIN accounts a ON t.account_id = a.id
+        WHERE t.id = ? AND a.vault_id = ?
+      `).get(id, ctx.vaultId) as { id: number; account_id: number; amount: number; date: string; transfer_account_id: number | null } | undefined;
+      if (!tx) continue;
+
+      if (tx.transfer_account_id) {
+        const paired = db.prepare(`
+          SELECT * FROM transactions
+          WHERE account_id = ? AND transfer_account_id = ? AND date = ? AND ABS(amount) = ABS(?) AND id != ?
+        `).get(tx.transfer_account_id, tx.account_id, tx.date, tx.amount, tx.id) as
+          { id: number; account_id: number; amount: number } | undefined;
+        if (paired && !txIds.includes(paired.id)) {
+          db.prepare('UPDATE accounts SET balance = balance - ? WHERE id = ?').run(paired.amount, paired.account_id);
+          db.prepare('DELETE FROM transactions WHERE id = ?').run(paired.id);
+        }
+      }
+
+      db.prepare('UPDATE accounts SET balance = balance - ? WHERE id = ?').run(tx.amount, tx.account_id);
+      db.prepare('DELETE FROM transactions WHERE id = ?').run(tx.id);
+    }
+  });
+
+  deleteTx(ids);
+  return NextResponse.json({ deleted: ids.length });
+}

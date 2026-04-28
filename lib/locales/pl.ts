@@ -131,6 +131,9 @@ const t: TranslationSet = {
   tx_no_transactions: 'Brak transakcji.',
   tx_needs_category: 'Wymaga kategorii',
   tx_transfer_badge: 'Przelew',
+  tx_selected_count: '{count} zaznaczono',
+  tx_delete_selected: 'Usuń',
+  tx_deselect_all: 'Odznacz wszystko',
 
   // InlineTransactionRow
   inline_no_category: '— Brak kategorii —',

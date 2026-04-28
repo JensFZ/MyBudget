@@ -128,6 +128,16 @@ export default function AccountPage({ params }: { params: Promise<{ id: string }
     loadTransactions();
   }
 
+  async function handleBulkDelete(ids: number[]) {
+    await fetch('/api/transactions', {
+      method: 'DELETE',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ ids }),
+    });
+    loadAccount();
+    loadTransactions();
+  }
+
   async function handleToggleCleared(txId: number, cleared: number) {
     await fetch(`/api/transactions/${txId}`, {
       method: 'PATCH',
@@ -400,6 +410,7 @@ export default function AccountPage({ params }: { params: Promise<{ id: string }
           onNewCancelled={() => setAddingNew(false)}
           onSave={handleSave}
           onDelete={handleDelete}
+          onBulkDelete={handleBulkDelete}
           onToggleCleared={handleToggleCleared}
         />
       </div>

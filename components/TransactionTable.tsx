@@ -2,7 +2,7 @@
 
 import { fmt } from '@/lib/format';
 import { useState } from 'react';
-import { Check, Circle } from 'lucide-react';
+import { Check, Circle, Trash2 } from 'lucide-react';
 import { useI18n } from '@/lib/i18n';
 import InlineTransactionRow, { Account, Category, CategoryGroup, SaveData } from '@/components/InlineTransactionRow';
 
@@ -34,6 +34,7 @@ interface Props {
   onNewCancelled: () => void;
   onSave: (id: number, data: SaveData) => Promise<void>;
   onDelete: (id: number) => void;
+  onBulkDelete: (ids: number[]) => void;
   onToggleCleared: (id: number, cleared: number) => void;
 }
 
@@ -56,6 +57,7 @@ export default function TransactionTable({
   onNewCancelled,
   onSave,
   onDelete,
+  onBulkDelete,
   onToggleCleared,
 }: Props) {
   const { t } = useI18n();
@@ -87,7 +89,33 @@ export default function TransactionTable({
 
   const colSpan = (showAccount ? 9 : 8) + ACTION_COL;
 
+  function handleBulkDelete() {
+    const ids = Array.from(selectedIds);
+    setSelectedIds(new Set());
+    onBulkDelete(ids);
+  }
+
   return (
+    <div>
+    {selectedIds.size > 0 && (
+      <div className="flex items-center gap-3 px-4 py-2 bg-blue-50 border-b border-blue-200 text-sm">
+        <span className="text-blue-700 font-medium">
+          {t('tx_selected_count', { count: String(selectedIds.size) })}
+        </span>
+        <button
+          onClick={handleBulkDelete}
+          className="flex items-center gap-1.5 px-3 py-1 bg-red-600 text-white rounded hover:bg-red-700 text-xs font-medium"
+        >
+          <Trash2 size={13} /> {t('tx_delete_selected')}
+        </button>
+        <button
+          onClick={() => setSelectedIds(new Set())}
+          className="ml-auto text-xs text-blue-600 hover:text-blue-800"
+        >
+          {t('tx_deselect_all')}
+        </button>
+      </div>
+    )}
     <div className="overflow-x-auto">
     <table className="w-full text-sm border-collapse min-w-[640px]">
       <thead>
@@ -238,12 +266,21 @@ export default function TransactionTable({
                   <Circle size={14} className="text-gray-300 mx-auto" />
                 )}
               </td>
-              <td className="w-20 px-2 py-2" />
+              <td className="w-20 px-2 py-2 text-right" onClick={e => e.stopPropagation()}>
+                <button
+                  onClick={() => onDelete(tx.id)}
+                  className="p-1 text-gray-300 hover:text-red-500 rounded"
+                  title={t('inline_delete_title')}
+                >
+                  <Trash2 size={14} />
+                </button>
+              </td>
             </tr>
           );
         })}
       </tbody>
     </table>
+    </div>
     </div>
   );
 }
