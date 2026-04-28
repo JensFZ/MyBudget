@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { fmt } from '@/lib/format';
 import { useI18n } from '@/lib/i18n';
-import { ChevronDown, ChevronRight, Plus, X, HelpCircle, RotateCcw, RotateCw, Archive, Trash2 } from 'lucide-react';
+import { ChevronDown, ChevronRight, Plus, X, HelpCircle, RotateCcw, RotateCw, Archive, Trash2, Pencil } from 'lucide-react';
 import BudgetRow from '@/components/BudgetRow';
 import PlanRightPanel from '@/components/PlanRightPanel';
 
@@ -59,6 +59,8 @@ export default function PlanPage() {
   const [newGroupName, setNewGroupName] = useState('');
 
   const [showArchived, setShowArchived] = useState(false);
+  const [renamingGroupId, setRenamingGroupId] = useState<number | null>(null);
+  const [renamingGroupName, setRenamingGroupName] = useState('');
 
 
   const load = useCallback(async () => {
@@ -169,6 +171,24 @@ export default function PlanPage() {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ is_hidden: true }),
+    });
+    load();
+  }
+
+  async function handleRenameCategory(categoryId: number, newName: string) {
+    await fetch(`/api/categories/${categoryId}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name: newName }),
+    });
+    load();
+  }
+
+  async function handleRenameGroup(groupId: number, newName: string) {
+    await fetch(`/api/category-groups/${groupId}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name: newName }),
     });
     load();
   }
@@ -395,8 +415,23 @@ export default function PlanPage() {
                       </td>
                       <td className="px-3 py-2 text-xs font-semibold uppercase tracking-wide text-gray-400">
                         <div className="flex items-center gap-2">
-                          <span className={group.isHidden ? 'text-amber-600 line-through' : 'text-gray-600'}>{group.name}</span>
-                          {!group.isHidden && (
+                          {renamingGroupId === group.id ? (
+                            <input
+                              autoFocus
+                              className="text-xs font-semibold uppercase tracking-wide border-b border-blue-400 bg-transparent outline-none px-0.5 w-40"
+                              value={renamingGroupName}
+                              onChange={e => setRenamingGroupName(e.target.value)}
+                              onKeyDown={e => {
+                                if (e.key === 'Enter') { e.preventDefault(); const v = renamingGroupName.trim(); setRenamingGroupId(null); if (v) handleRenameGroup(group.id, v); }
+                                if (e.key === 'Escape') setRenamingGroupId(null);
+                              }}
+                              onBlur={() => { const v = renamingGroupName.trim(); setRenamingGroupId(null); if (v) handleRenameGroup(group.id, v); }}
+                              onClick={e => e.stopPropagation()}
+                            />
+                          ) : (
+                            <span className={group.isHidden ? 'text-amber-600 line-through' : 'text-gray-600'}>{group.name}</span>
+                          )}
+                          {!group.isHidden && renamingGroupId !== group.id && (
                             <button
                               onClick={e => {
                                 e.stopPropagation();
@@ -420,6 +455,13 @@ export default function PlanPage() {
                               </button>
                             ) : (
                               <>
+                                <button
+                                  onClick={e => { e.stopPropagation(); setRenamingGroupName(group.name); setRenamingGroupId(group.id); }}
+                                  className="p-0.5 text-gray-400 hover:text-blue-500 rounded"
+                                  title={t('plan_rename')}
+                                >
+                                  <Pencil size={13} />
+                                </button>
                                 <button
                                   onClick={e => { e.stopPropagation(); handleArchiveGroup(group.id); }}
                                   className="p-0.5 text-gray-400 hover:text-amber-500 rounded"
@@ -466,6 +508,7 @@ export default function PlanPage() {
                         onSelect={() => setSelectedCategoryId(id => id === row.category_id ? null : row.category_id)}
                         onAssignChange={handleAssignChange}
                         isArchived={row.is_hidden === 1}
+                        onRename={newName => handleRenameCategory(row.category_id, newName)}
                         onRestore={row.is_hidden === 1 ? () => handleRestoreCategory(row.category_id) : undefined}
                         onArchive={row.is_hidden === 0 ? () => handleArchiveCategory(row.category_id) : undefined}
                         onDelete={row.is_hidden === 0 ? () => handleDeleteCategory(row.category_id, row.category_name) : undefined}
