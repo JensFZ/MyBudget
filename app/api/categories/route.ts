@@ -1,12 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import db from '@/lib/db';
-import { seedIfNeeded } from '@/lib/seed';
 import { resolveVault } from '@/lib/vault';
 
 export async function GET(req: NextRequest) {
   const ctx = await resolveVault(req);
   if (!ctx) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  seedIfNeeded(ctx.vaultId);
   const groups = db.prepare(
     'SELECT * FROM category_groups WHERE vault_id = ? ORDER BY sort_order'
   ).all(ctx.vaultId) as { id: number; name: string; sort_order: number; is_hidden: number }[];

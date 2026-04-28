@@ -53,7 +53,3 @@ CREATE TABLE IF NOT EXISTS goals (
   category_id INTEGER REFERENCES categories(id),
   created_at TEXT DEFAULT (datetime('now'))
 );
-
-CREATE TABLE IF NOT EXISTS seed_done (
-  id INTEGER PRIMARY KEY
-);

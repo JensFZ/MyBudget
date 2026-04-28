@@ -1,12 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import db from '@/lib/db';
-import { seedIfNeeded } from '@/lib/seed';
 import { resolveVault } from '@/lib/vault';
 
 export async function GET(req: NextRequest) {
   const ctx = await resolveVault(req);
   if (!ctx) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  seedIfNeeded(ctx.vaultId);
 
   const { searchParams } = new URL(req.url);
   const from = searchParams.get('from') ?? '2025-12';

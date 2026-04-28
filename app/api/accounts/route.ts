@@ -1,12 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import db from '@/lib/db';
-import { seedIfNeeded } from '@/lib/seed';
 import { resolveVault } from '@/lib/vault';
 
 export async function GET(req: NextRequest) {
   const ctx = await resolveVault(req);
   if (!ctx) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  seedIfNeeded(ctx.vaultId);
   const accounts = db.prepare(
     'SELECT * FROM accounts WHERE vault_id = ? ORDER BY on_budget DESC, type, name'
   ).all(ctx.vaultId);
