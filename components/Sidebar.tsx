@@ -172,8 +172,16 @@ export default function Sidebar({ isOpen, onClose }: { isOpen: boolean; onClose:
   const closed       = accounts.filter(a => active(a) && a.type === 'closed').sort(byStarred);
   const archived     = accounts.filter(a => a.archived === 1).sort(byStarred);
 
-  function NavLink({ href, icon, label }: { href: string; icon: React.ReactNode; label: string }) {
+  function NavLink({ href, icon, label, disabled }: { href: string; icon: React.ReactNode; label: string; disabled?: boolean }) {
     const active = pathname === href || pathname.startsWith(href + '/');
+    if (disabled) {
+      return (
+        <span className="flex items-center gap-3 px-4 py-2 rounded-lg mx-2 text-sm font-medium text-slate-600 cursor-not-allowed select-none">
+          {icon}
+          {label}
+        </span>
+      );
+    }
     return (
       <Link
         href={href}
@@ -478,7 +486,7 @@ export default function Sidebar({ isOpen, onClose }: { isOpen: boolean; onClose:
         {/* Navigation */}
         <nav className="pt-3 pb-2">          <NavLink href="/plan" icon={<LayoutGrid size={16} />} label={t('nav_plan')} />
           <NavLink href="/reflect" icon={<TrendingUp size={16} />} label={t('nav_reflect')} />
-          <NavLink href="/accounts" icon={<List size={16} />} label={t('nav_all_accounts')} />
+          <NavLink href="/accounts" icon={<List size={16} />} label={t('nav_all_accounts')} disabled={accounts.length === 0} />
         </nav>
 
         <div className="border-t border-slate-800 mt-1" />
