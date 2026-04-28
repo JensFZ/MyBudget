@@ -19,13 +19,13 @@ type AccountSubtype = {
   labelKey: string;
   descKey: string;
   icon: React.ReactNode;
-  dbType: 'cash' | 'credit' | 'tracking' | 'closed';
+  dbType: 'checking' | 'savings' | 'cash' | 'credit' | 'tracking' | 'closed';
   on_budget: 1 | 0;
 };
 
 const BUDGET_ACCOUNTS: AccountSubtype[] = [
-  { id: 'checking', labelKey: 'acct_checking', descKey: 'acct_checking_desc', icon: <Banknote size={22} />, dbType: 'cash', on_budget: 1 },
-  { id: 'savings', labelKey: 'acct_savings', descKey: 'acct_savings_desc', icon: <PiggyBank size={22} />, dbType: 'cash', on_budget: 1 },
+  { id: 'checking', labelKey: 'acct_checking', descKey: 'acct_checking_desc', icon: <Banknote size={22} />, dbType: 'checking', on_budget: 1 },
+  { id: 'savings', labelKey: 'acct_savings', descKey: 'acct_savings_desc', icon: <PiggyBank size={22} />, dbType: 'savings', on_budget: 1 },
   { id: 'cash', labelKey: 'acct_cash', descKey: 'acct_cash_desc', icon: <Wallet size={22} />, dbType: 'cash', on_budget: 1 },
   { id: 'credit', labelKey: 'acct_credit', descKey: 'acct_credit_desc', icon: <CreditCard size={22} />, dbType: 'credit', on_budget: 1 },
   { id: 'loc', labelKey: 'acct_loc', descKey: 'acct_loc_desc', icon: <DollarSign size={22} />, dbType: 'credit', on_budget: 1 },

@@ -165,11 +165,12 @@ export default function Sidebar({ isOpen, onClose }: { isOpen: boolean; onClose:
   const byStarred = (a: Account, b: Account) => (b.starred ?? 0) - (a.starred ?? 0);
 
   const active = (a: Account) => !a.archived;
-  const cash     = accounts.filter(a => active(a) && a.type === 'cash'    && a.on_budget === 1).sort(byStarred);
-  const credit   = accounts.filter(a => active(a) && a.type === 'credit'  && a.on_budget === 1).sort(byStarred);
-  const tracking = accounts.filter(a => active(a) && a.on_budget === 0    && a.type !== 'closed').sort(byStarred);
-  const closed   = accounts.filter(a => active(a) && a.type === 'closed').sort(byStarred);
-  const archived = accounts.filter(a => a.archived === 1).sort(byStarred);
+  const bankAccounts = accounts.filter(a => active(a) && (a.type === 'checking' || a.type === 'savings') && a.on_budget === 1).sort(byStarred);
+  const cash         = accounts.filter(a => active(a) && a.type === 'cash'   && a.on_budget === 1).sort(byStarred);
+  const credit       = accounts.filter(a => active(a) && a.type === 'credit' && a.on_budget === 1).sort(byStarred);
+  const tracking     = accounts.filter(a => active(a) && a.on_budget === 0   && a.type !== 'closed').sort(byStarred);
+  const closed       = accounts.filter(a => active(a) && a.type === 'closed').sort(byStarred);
+  const archived     = accounts.filter(a => a.archived === 1).sort(byStarred);
 
   function NavLink({ href, icon, label }: { href: string; icon: React.ReactNode; label: string }) {
     const active = pathname === href || pathname.startsWith(href + '/');
@@ -484,6 +485,7 @@ export default function Sidebar({ isOpen, onClose }: { isOpen: boolean; onClose:
 
         {/* Accounts */}
         <div className="flex-1 overflow-y-auto py-2">
+          <AccountGroup title={t('sidebar_account_group_accounts')} items={bankAccounts} />
           <AccountGroup title={t('sidebar_account_group_cash')} items={cash} />
           <AccountGroup title={t('sidebar_account_group_credit')} items={credit} />
           <AccountGroup title={t('sidebar_account_group_tracking')} items={tracking} />

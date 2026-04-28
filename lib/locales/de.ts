@@ -17,6 +17,7 @@ const t: TranslationSet = {
   sidebar_add_account: 'Konto hinzufügen',
   sidebar_bank_connections: 'Bankverbindungen',
   sidebar_refer_friend: 'Freunde einladen',
+  sidebar_account_group_accounts: 'Konten',
   sidebar_account_group_cash: 'Bargeld',
   sidebar_account_group_credit: 'Kreditkarten',
   sidebar_account_group_tracking: 'Verfolgung',
