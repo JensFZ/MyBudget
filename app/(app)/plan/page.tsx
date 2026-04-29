@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { fmt } from '@/lib/format';
 import { useI18n } from '@/lib/i18n';
-import { ChevronDown, ChevronRight, Plus, X, HelpCircle, RotateCcw, RotateCw, Archive, Trash2, Pencil } from 'lucide-react';
+import { ChevronDown, ChevronRight, Plus, X, RotateCcw, RotateCw, Archive, Trash2, Pencil } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import BudgetRow from '@/components/BudgetRow';
@@ -367,9 +367,6 @@ export default function PlanPage() {
           }`}
         >
           <Archive size={12} /> {t('plan_show_archived')}
-        </button>
-        <button className="text-gray-400 hover:text-gray-600">
-          <HelpCircle size={16} />
         </button>
       </div>
 
