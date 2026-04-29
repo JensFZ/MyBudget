@@ -42,6 +42,12 @@ export async function POST(req: NextRequest) {
   const account = db.prepare('SELECT id FROM accounts WHERE id = ? AND vault_id = ?').get(account_id, ctx.vaultId);
   if (!account) return NextResponse.json({ error: 'Invalid account' }, { status: 400 });
 
+  // Verify transfer destination also belongs to the same vault
+  if (transfer_account_id) {
+    const destAccount = db.prepare('SELECT id FROM accounts WHERE id = ? AND vault_id = ?').get(transfer_account_id, ctx.vaultId);
+    if (!destAccount) return NextResponse.json({ error: 'Invalid transfer account' }, { status: 400 });
+  }
+
   const result = db.prepare(`
     INSERT INTO transactions (account_id, category_id, date, amount, memo, payee, cleared, flag, transfer_account_id)
     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING *

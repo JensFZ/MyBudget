@@ -11,12 +11,12 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
   if (!account) return NextResponse.json({ error: 'Not found' }, { status: 404 });
 
   const clearedBalance = (db.prepare(
-    'SELECT COALESCE(SUM(amount), 0) as total FROM transactions WHERE account_id = ? AND cleared = 1'
-  ).get(Number(id)) as { total: number }).total;
+    'SELECT COALESCE(SUM(t.amount), 0) as total FROM transactions t JOIN accounts a ON t.account_id = a.id WHERE t.account_id = ? AND t.cleared = 1 AND a.vault_id = ?'
+  ).get(Number(id), ctx.vaultId) as { total: number }).total;
 
   const unclearedBalance = (db.prepare(
-    'SELECT COALESCE(SUM(amount), 0) as total FROM transactions WHERE account_id = ? AND cleared = 0'
-  ).get(Number(id)) as { total: number }).total;
+    'SELECT COALESCE(SUM(t.amount), 0) as total FROM transactions t JOIN accounts a ON t.account_id = a.id WHERE t.account_id = ? AND t.cleared = 0 AND a.vault_id = ?'
+  ).get(Number(id), ctx.vaultId) as { total: number }).total;
 
   return NextResponse.json({ ...account as object, clearedBalance, unclearedBalance });
 }
