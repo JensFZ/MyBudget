@@ -64,6 +64,19 @@ const migrations: string[] = [
   `ALTER TABLE categories ADD COLUMN goal_date TEXT`,
   `ALTER TABLE categories ADD COLUMN is_hidden INTEGER DEFAULT 0`,
   `ALTER TABLE category_groups ADD COLUMN is_hidden INTEGER DEFAULT 0`,
+  `CREATE TABLE IF NOT EXISTS bank_connections (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    account_id INTEGER NOT NULL REFERENCES accounts(id) ON DELETE CASCADE,
+    vault_id INTEGER NOT NULL REFERENCES vaults(id),
+    bank_url TEXT NOT NULL,
+    blz TEXT NOT NULL,
+    username_enc TEXT NOT NULL,
+    pin_enc TEXT NOT NULL,
+    bank_account_iban TEXT,
+    last_synced_at TEXT,
+    last_sync_error TEXT,
+    created_at TEXT DEFAULT (datetime('now'))
+  )`,
   `CREATE TABLE IF NOT EXISTS scheduled_transactions (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     account_id INTEGER NOT NULL REFERENCES accounts(id),

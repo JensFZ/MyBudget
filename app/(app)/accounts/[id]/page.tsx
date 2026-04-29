@@ -5,9 +5,10 @@ import { use } from 'react';
 import { useRouter } from 'next/navigation';
 import { fmt } from '@/lib/format';
 import { useI18n } from '@/lib/i18n';
-import { Plus, FileUp, RotateCcw, RotateCw, Search, Star, Edit2, X, Check, Archive, ArchiveRestore, Trash2 } from 'lucide-react';
+import { Plus, FileUp, RotateCcw, RotateCw, Search, Star, Edit2, X, Check, Archive, ArchiveRestore, Trash2, Wifi, RefreshCw, WifiOff, AlertCircle } from 'lucide-react';
 import TransactionTable from '@/components/TransactionTable';
 import ImportDialog from '@/components/ImportDialog';
+import BankConnectionDialog from '@/components/BankConnectionDialog';
 import type { Account, Category, CategoryGroup, SaveData } from '@/components/InlineTransactionRow';
 
 type Filter = 'all' | 'uncleared' | 'needs_category';
@@ -60,6 +61,19 @@ export default function AccountPage({ params }: { params: Promise<{ id: string }
   const [editAccountBalance, setEditAccountBalance] = useState('');
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
+  interface BankConn {
+    id: number;
+    account_id: number;
+    blz: string;
+    bank_account_iban: string | null;
+    last_synced_at: string | null;
+    last_sync_error: string | null;
+  }
+  const [bankConn, setBankConn] = useState<BankConn | null>(null);
+  const [showBankDialog, setShowBankDialog] = useState(false);
+  const [bankSyncing, setBankSyncing] = useState(false);
+  const [syncResult, setSyncResult] = useState<string | null>(null);
+
   const needsCategoryCount = transactions.filter(tx => !tx.category_id && tx.amount < 0 && !tx.transfer_account_id).length;
 
   const filtered = transactions.filter(tx => {
@@ -78,6 +92,14 @@ export default function AccountPage({ params }: { params: Promise<{ id: string }
     if (res.ok) setAccount(await res.json());
   }, [id]);
 
+  const loadBankConn = useCallback(async () => {
+    const res = await fetch(`/api/bank-connections?account_id=${id}`);
+    if (res.ok) {
+      const list = await res.json();
+      setBankConn(list[0] ?? null);
+    }
+  }, [id]);
+
   const loadTransactions = useCallback(async () => {
     const res = await fetch(`/api/transactions?account_id=${id}`);
     setTransactions(await res.json());
@@ -86,12 +108,13 @@ export default function AccountPage({ params }: { params: Promise<{ id: string }
   useEffect(() => {
     loadAccount();
     loadTransactions();
+    loadBankConn();
     fetch('/api/accounts').then(r => r.json()).then(setAccounts).catch(() => {});
     fetch('/api/categories').then(r => r.json()).then((d: { groups: CategoryGroup[]; categories: Category[] }) => {
       setGroups(d.groups);
       setCategories(d.categories);
     }).catch(() => {});
-  }, [loadAccount, loadTransactions]);
+  }, [loadAccount, loadTransactions, loadBankConn]);
 
   function notifySidebar() {
     window.dispatchEvent(new CustomEvent('accounts-updated'));
@@ -229,6 +252,34 @@ export default function AccountPage({ params }: { params: Promise<{ id: string }
     });
     setAccount({ ...account, starred: newVal });
     window.dispatchEvent(new CustomEvent('accounts-updated'));
+  }
+
+  async function handleBankSync() {
+    if (!bankConn) return;
+    setBankSyncing(true);
+    setSyncResult(null);
+    try {
+      const res = await fetch(`/api/bank-connections/${bankConn.id}/sync`, { method: 'POST' });
+      const data = await res.json();
+      if (res.ok) {
+        setSyncResult(t('bank_sync_result', { imported: String(data.imported) }));
+        loadAccount();
+        loadTransactions();
+        loadBankConn();
+        notifySidebar();
+      } else {
+        setSyncResult(t('bank_sync_error'));
+      }
+    } finally {
+      setBankSyncing(false);
+    }
+  }
+
+  async function handleBankDisconnect() {
+    if (!bankConn) return;
+    await fetch(`/api/bank-connections/${bankConn.id}`, { method: 'DELETE' });
+    setBankConn(null);
+    setSyncResult(null);
   }
 
   function toggleFilter(f: Filter) {
@@ -389,6 +440,55 @@ export default function AccountPage({ params }: { params: Promise<{ id: string }
         </div>
       </div>
 
+      {/* Bank connection strip */}
+      {bankConn ? (
+        <div className={`flex items-center gap-3 px-4 md:px-6 py-2 border-b shrink-0 text-sm ${bankConn.last_sync_error ? 'bg-red-50 border-red-100' : 'bg-green-50 border-green-100'}`}>
+          <Wifi size={14} className={bankConn.last_sync_error ? 'text-red-500' : 'text-green-600'} />
+          <span className="text-gray-700 font-medium">{t('bank_section_title')}</span>
+          {bankConn.bank_account_iban && (
+            <span className="text-gray-500 font-mono text-xs">{t('bank_connected_iban', { iban: bankConn.bank_account_iban })}</span>
+          )}
+          {bankConn.last_sync_error && (
+            <span className="flex items-center gap-1 text-red-600 text-xs"><AlertCircle size={12} />{t('bank_sync_error')}</span>
+          )}
+          {!bankConn.last_sync_error && (
+            <span className="text-gray-400 text-xs">
+              {bankConn.last_synced_at
+                ? t('bank_sync_last', { date: new Date(bankConn.last_synced_at).toLocaleString() })
+                : t('bank_sync_never')}
+            </span>
+          )}
+          {syncResult && <span className="text-green-700 text-xs">{syncResult}</span>}
+          <div className="ml-auto flex items-center gap-2">
+            <button
+              onClick={handleBankSync}
+              disabled={bankSyncing}
+              className="flex items-center gap-1 text-xs text-blue-600 border border-blue-200 rounded-lg px-2.5 py-1 hover:bg-blue-50 disabled:opacity-50"
+            >
+              <RefreshCw size={12} className={bankSyncing ? 'animate-spin' : ''} />
+              {bankSyncing ? t('bank_sync_syncing') : t('bank_sync_button')}
+            </button>
+            <button
+              onClick={handleBankDisconnect}
+              className="flex items-center gap-1 text-xs text-gray-500 border border-gray-200 rounded-lg px-2.5 py-1 hover:bg-gray-100"
+            >
+              <WifiOff size={12} /> {t('bank_disconnect_button')}
+            </button>
+          </div>
+        </div>
+      ) : (
+        <div className="flex items-center gap-2 px-4 md:px-6 py-2 border-b bg-gray-50 shrink-0">
+          <Wifi size={14} className="text-gray-400" />
+          <span className="text-sm text-gray-500">{t('bank_section_title')}</span>
+          <button
+            onClick={() => setShowBankDialog(true)}
+            className="ml-auto flex items-center gap-1 text-xs text-blue-600 border border-blue-200 rounded-lg px-2.5 py-1 hover:bg-blue-50"
+          >
+            {t('bank_connect_button')}
+          </button>
+        </div>
+      )}
+
       {/* Active filter indicator */}
       {(activeFilter !== 'all' || search) && (
         <div className="bg-blue-50 border-b border-blue-100 px-6 py-1.5 flex items-center gap-2 shrink-0">
@@ -510,6 +610,15 @@ export default function AccountPage({ params }: { params: Promise<{ id: string }
             </div>
           </div>
         </div>
+      )}
+
+      {/* Bank connection dialog */}
+      {showBankDialog && (
+        <BankConnectionDialog
+          accountId={account.id}
+          onClose={() => setShowBankDialog(false)}
+          onSaved={() => { setShowBankDialog(false); loadBankConn(); }}
+        />
       )}
 
       {/* Delete confirmation modal */}
