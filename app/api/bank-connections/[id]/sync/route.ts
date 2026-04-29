@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import db from '@/lib/db';
 import { resolveVault } from '@/lib/vault';
 import { decrypt } from '@/lib/bank-crypto';
-import { fetchBalance, fetchTransactions } from '@/lib/fints-client';
+import { fetchSync } from '@/lib/fints-client';
 
 export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const ctx = await resolveVault(req);
@@ -32,10 +32,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
       ? new Date(conn.last_synced_at)
       : new Date(Date.now() - 90 * 24 * 60 * 60 * 1000);
 
-    const [transactions, newBalance] = await Promise.all([
-      fetchTransactions(config, conn.bank_account_iban, fromDate),
-      fetchBalance(config, conn.bank_account_iban),
-    ]);
+    const { transactions, balance: newBalance } = await fetchSync(config, conn.bank_account_iban, fromDate);
 
     // Import new transactions (deduplicate via import_hash)
     let imported = 0;

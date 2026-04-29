@@ -29,6 +29,8 @@ const BLZ_MAP: Record<string, string> = {
   '30020900': 'https://fints.targobank.de/fints',
   // Consorsbank
   '76030080': 'https://fints.consorsbank.de/banking',
+  // 1822direkt (Frankfurter Sparkasse)
+  '50050201': 'https://banking.1822direkt.com/HBCI',
   // N26 (kein FinTS)
   // Revolut (kein FinTS)
 };

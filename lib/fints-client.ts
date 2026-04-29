@@ -1,5 +1,5 @@
 import { PinTanClient } from 'fints';
-import type { SEPAAccount } from 'fints';
+import type { SEPAAccount, StructuredDescription } from 'fints';
 
 export type { SEPAAccount };
 
@@ -47,40 +47,40 @@ export async function fetchAccounts(config: FintsConfig): Promise<SEPAAccount[]>
   return client.accounts();
 }
 
-export async function fetchBalance(config: FintsConfig, iban: string): Promise<number> {
-  const client = makeClient(config);
-  const accounts = await client.accounts();
-  const account = accounts.find(a => a.iban === iban);
-  if (!account) throw new Error(`Account ${iban} not found`);
-  const balance = await client.balance(account);
-  return balance.bookedBalance;
+export interface SyncResult {
+  transactions: ParsedTransaction[];
+  balance: number;
 }
 
-export async function fetchTransactions(
+export async function fetchSync(
   config: FintsConfig,
   iban: string,
   fromDate: Date,
-): Promise<ParsedTransaction[]> {
+): Promise<SyncResult> {
   const client = makeClient(config);
   const accounts = await client.accounts();
   const account = accounts.find(a => a.iban === iban);
   if (!account) throw new Error(`Account ${iban} not found`);
 
-  const statements = await client.statements(account, fromDate, new Date());
-  const result: ParsedTransaction[] = [];
+  const [statements, balanceInfo] = await Promise.all([
+    client.statements(account, fromDate, new Date()),
+    client.balance(account),
+  ]);
+
+  const transactions: ParsedTransaction[] = [];
 
   for (const statement of statements) {
     for (const tx of statement.transactions) {
       const amount = tx.isCredit ? tx.amount : -tx.amount;
       const date = parseValueDate(tx.valueDate);
-      const structured = (tx as { descriptionStructured?: { name?: string; reference?: { text?: string } } }).descriptionStructured;
+      const structured = tx.descriptionStructured as StructuredDescription | undefined;
       const payee = structured?.name?.trim() || null;
       const memo = structured?.reference?.text?.trim() || tx.description?.trim() || null;
       const import_hash = `fints:${iban}:${tx.valueDate}:${tx.isCredit ? '+' : '-'}${tx.amount}:${(tx.description ?? '').slice(0, 80)}`;
 
-      result.push({ date, payee, memo, amount, import_hash });
+      transactions.push({ date, payee, memo, amount, import_hash });
     }
   }
 
-  return result;
+  return { transactions, balance: balanceInfo.bookedBalance };
 }
