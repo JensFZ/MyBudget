@@ -6,14 +6,14 @@ services:
         BUILD_COMMIT: ${BUILD_COMMIT:-unknown}
         BUILD_DATE: ${BUILD_DATE:-}
     ports:
-      - "3000:3000"
+      - "3003:3000"
     volumes:
       - budget_data:/app/data
     restart: unless-stopped
     environment:
       - NODE_ENV=production
       # Public URL used for vault invite links – set to your domain or IP
-      - APP_URL=http://localhost:3000
+      - APP_URL=https://mybudget.jensfz.de
 
 volumes:
   budget_data:
