@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { X, Wifi, ChevronRight, Check, AlertCircle } from 'lucide-react';
 import { useI18n } from '@/lib/i18n';
+import { lookupFintsUrl } from '@/lib/blz-lookup';
 
 interface SEPAAccount {
   iban: string;
@@ -114,7 +115,14 @@ export default function BankConnectionDialog({ accountId, onClose, onSaved }: Pr
                   className={inputCls}
                   placeholder="12345678"
                   value={blz}
-                  onChange={e => setBlz(e.target.value.replace(/\D/g, '').slice(0, 8))}
+                  onChange={e => {
+                    const v = e.target.value.replace(/\D/g, '').slice(0, 8);
+                    setBlz(v);
+                    if (v.length === 8) {
+                      const found = lookupFintsUrl(v);
+                      if (found) setUrl(found);
+                    }
+                  }}
                   maxLength={8}
                   autoFocus
                 />
@@ -127,7 +135,12 @@ export default function BankConnectionDialog({ accountId, onClose, onSaved }: Pr
                   value={url}
                   onChange={e => setUrl(e.target.value)}
                 />
-                <p className="text-xs text-gray-400 mt-1">{t('bank_connect_url_hint')}</p>
+                {blz.length === 8 && url && lookupFintsUrl(blz) === url
+                  ? <p className="text-xs text-green-600 mt-1">✓ {t('bank_connect_url_hint_found')}</p>
+                  : blz.length === 8 && !url
+                    ? <p className="text-xs text-amber-600 mt-1">{t('bank_connect_url_hint_unknown')}</p>
+                    : <p className="text-xs text-gray-400 mt-1">{t('bank_connect_url_hint')}</p>
+                }
               </div>
               <div>
                 <label className="block text-xs font-medium text-gray-600 mb-1">{t('bank_connect_username_label')}</label>

@@ -269,6 +269,8 @@ const t: TranslationSet = {
   bank_connect_url_label: 'FinTS-Server URL',
   bank_connect_url_placeholder: 'https://banking.meinebank.de/fints',
   bank_connect_url_hint: 'Wird für bekannte Banken automatisch ermittelt. Sonst im Online-Banking-Hilfebereich der Bank nachschlagen.',
+  bank_connect_url_hint_found: 'URL automatisch erkannt',
+  bank_connect_url_hint_unknown: 'Keine URL für diese BLZ bekannt — bitte manuell eingeben.',
   bank_connect_username_label: 'Online-Banking Benutzername',
   bank_connect_pin_label: 'PIN / Passwort',
   bank_connect_test: 'Verbinden',
