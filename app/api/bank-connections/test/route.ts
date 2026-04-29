@@ -28,6 +28,9 @@ export async function POST(req: NextRequest) {
     if (/tan/i.test(msg)) {
       return NextResponse.json({ error: 'tan_required' }, { status: 422 });
     }
+    if (/must end with|does not end with|invalid response|missing.*hnhbk/i.test(msg)) {
+      return NextResponse.json({ error: 'bad_response' }, { status: 502 });
+    }
     return NextResponse.json({ error: 'connection_failed', message: msg }, { status: 502 });
   }
 }

@@ -48,6 +48,7 @@ export default function BankConnectionDialog({ accountId, onClose, onSaved }: Pr
         if (data.error === 'wrong_credentials') setError(t('bank_connect_error_credentials'));
         else if (data.error === 'tan_required') setError(t('bank_connect_error_tan'));
         else if (data.error === 'no_url') setError(t('bank_connect_error_no_url'));
+        else if (data.error === 'bad_response') setError(t('bank_connect_error_bad_response'));
         else setError(t('bank_connect_error_generic', { message: data.message ?? '' }));
         return;
       }

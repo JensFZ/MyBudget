@@ -281,6 +281,7 @@ const t: TranslationSet = {
   bank_connect_error_credentials: 'Nieprawidłowa nazwa użytkownika lub PIN.',
   bank_connect_error_tan: 'Ten bank wymaga potwierdzenia TAN i nie jest obsługiwany. Użyj importu CSV.',
   bank_connect_error_no_url: 'Nieznany adres FinTS dla tego BLZ. Podaj adres ręcznie.',
+  bank_connect_error_bad_response: 'Adres URL banku nie zwrócił prawidłowej odpowiedzi FinTS. Sprawdź adres URL lub użyj importu CSV.',
   bank_connect_error_generic: 'Błąd połączenia: {message}',
   bank_connect_button: 'Połącz z bankiem',
   bank_disconnect_button: 'Rozłącz',
