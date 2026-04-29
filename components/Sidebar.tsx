@@ -517,6 +517,12 @@ export default function Sidebar({ isOpen, onClose }: { isOpen: boolean; onClose:
             <Building2 size={14} />
             {t('sidebar_refer_friend')}
           </button>
+          <p className="px-2 pt-1 text-[10px] text-slate-600 leading-tight">
+            Build {process.env.NEXT_PUBLIC_BUILD_DATE}
+            {process.env.NEXT_PUBLIC_BUILD_COMMIT && (
+              <> &middot; <span className="font-mono">{process.env.NEXT_PUBLIC_BUILD_COMMIT}</span></>
+            )}
+          </p>
         </div>
 
         <AddAccountDialog
