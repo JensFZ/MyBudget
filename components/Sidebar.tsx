@@ -522,7 +522,7 @@ export default function Sidebar({ isOpen, onClose }: { isOpen: boolean; onClose:
         <AddAccountDialog
           open={showAddAccount}
           onClose={() => setShowAddAccount(false)}
-          onSaved={() => { setShowAddAccount(false); loadAccounts(); }}
+          onSaved={() => loadAccounts()}
         />
       </aside>
 
