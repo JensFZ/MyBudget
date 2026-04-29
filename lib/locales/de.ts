@@ -219,6 +219,11 @@ const t: TranslationSet = {
   add_account_save: 'Konto hinzufügen',
   add_account_saving: 'Wird hinzugefügt...',
   add_account_name_placeholder: 'Mein {type}',
+  add_account_created: 'Konto erfolgreich angelegt',
+  add_account_connect_bank_title: 'Bank verbinden',
+  add_account_connect_bank_prompt: 'Möchtest du dieses Konto mit deiner Bank verbinden?',
+  add_account_connect_bank_desc: 'Mit einer Bankverbindung werden Transaktionen und Kontostand automatisch per FinTS/HBCI importiert.',
+  add_account_skip: 'Überspringen',
 
   // Account subtypes
   acct_checking: 'Girokonto',

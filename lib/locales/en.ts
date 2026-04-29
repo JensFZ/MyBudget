@@ -219,6 +219,11 @@ const t: TranslationSet = {
   add_account_save: 'Add Account',
   add_account_saving: 'Adding...',
   add_account_name_placeholder: 'My {type}',
+  add_account_created: 'Account created successfully',
+  add_account_connect_bank_title: 'Connect Bank',
+  add_account_connect_bank_prompt: 'Would you like to connect this account to your bank?',
+  add_account_connect_bank_desc: 'A bank connection automatically imports transactions and balance via FinTS/HBCI.',
+  add_account_skip: 'Skip',
 
   // Account subtypes
   acct_checking: 'Checking',
