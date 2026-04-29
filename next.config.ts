@@ -11,14 +11,14 @@ function getGitInfo() {
   }
 }
 
-const { hash, date } = getGitInfo();
+const git = getGitInfo();
 
 const nextConfig: NextConfig = {
   output: 'standalone',
   serverExternalPackages: ['better-sqlite3'],
   env: {
-    NEXT_PUBLIC_BUILD_DATE: date,
-    NEXT_PUBLIC_BUILD_COMMIT: hash,
+    NEXT_PUBLIC_BUILD_DATE: process.env.NEXT_PUBLIC_BUILD_DATE ?? git.date,
+    NEXT_PUBLIC_BUILD_COMMIT: process.env.NEXT_PUBLIC_BUILD_COMMIT ?? git.hash,
   },
 };
 

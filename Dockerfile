@@ -13,6 +13,10 @@ RUN apk add --no-cache libc6-compat
 WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
+ARG BUILD_COMMIT=unknown
+ARG BUILD_DATE
+ENV NEXT_PUBLIC_BUILD_COMMIT=$BUILD_COMMIT
+ENV NEXT_PUBLIC_BUILD_DATE=$BUILD_DATE
 RUN npm run build
 
 # ── Stage 3: Production runner ───────────────────────────────────────────────
