@@ -137,6 +137,7 @@ export default function AccountPage({ params }: { params: Promise<{ id: string }
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
+        date: data.date,
         amount: data.amount,
         cleared: data.cleared,
         category_id: data.category_id,

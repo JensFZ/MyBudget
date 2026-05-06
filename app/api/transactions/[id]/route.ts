@@ -76,6 +76,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
   const fields: string[] = [];
   const values: (string | number | null)[] = [];
 
+  if (body.date !== undefined) { fields.push('date = ?'); values.push(body.date); }
   if (body.cleared !== undefined) { fields.push('cleared = ?'); values.push(body.cleared); }
   if (body.amount !== undefined) { fields.push('amount = ?'); values.push(body.amount); }
   if (body.payee !== undefined) { fields.push('payee = ?'); values.push(body.payee); }
