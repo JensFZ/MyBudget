@@ -6,42 +6,51 @@ export function fmt2(n: number): string {
   return Math.abs(n).toFixed(2).replaceAll('.', ',');
 }
 
-/** Evaluate chained expressions like "1,50+8+8", "100-5,20+3", "10*1,19", "100/4" */
+/** Evaluate chained expressions like "1,50+8+8", "100÷4×3", "12,5*2-1" */
 export function evalAmount(expr: string): number {
-  const s = expr.trim().replaceAll(',', '.');
-  const raw = s.match(/[+\-*/]|[0-9]+(?:\.[0-9]+)?/g);
-  if (!raw) return 0;
+  const s = expr.trim()
+    .replaceAll(',', '.')
+    .replaceAll('×', '*')
+    .replaceAll('÷', '/')
+    .replaceAll('−', '-');
 
-  let i = 0;
-  const nums: number[] = [];
-  const ops: string[] = [];
+  if (!s) return 0;
 
-  let sign = 1;
-  if (raw[i] === '-') { sign = -1; i++; }
-  else if (raw[i] === '+') { i++; }
-  if (i >= raw.length) return 0;
-  nums.push(sign * parseFloat(raw[i++]));
+  let pos = 0;
 
-  while (i < raw.length - 1) {
-    const op = raw[i++];
-    nums.push(parseFloat(raw[i++]));
-    ops.push(op);
+  function parseFactor(): number {
+    let sign = 1;
+    if (pos < s.length && s[pos] === '-') { sign = -1; pos++; }
+    else if (pos < s.length && s[pos] === '+') { pos++; }
+    const start = pos;
+    while (pos < s.length && (s[pos] >= '0' && s[pos] <= '9' || s[pos] === '.')) pos++;
+    const n = parseFloat(s.slice(start, pos));
+    return sign * (isNaN(n) ? 0 : n);
   }
 
-  // First pass: * and /
-  let j = 0;
-  while (j < ops.length) {
-    if (ops[j] === '*' || ops[j] === '/') {
-      const val = ops[j] === '*' ? nums[j] * nums[j + 1] : nums[j] / nums[j + 1];
-      nums.splice(j, 2, val);
-      ops.splice(j, 1);
-    } else { j++; }
+  function parseTerm(): number {
+    let result = parseFactor();
+    while (pos < s.length && (s[pos] === '*' || s[pos] === '/')) {
+      const op = s[pos++];
+      const right = parseFactor();
+      result = op === '*' ? result * right : right !== 0 ? result / right : 0;
+    }
+    return result;
   }
 
-  // Second pass: + and -
-  let total = nums[0];
-  for (let k = 0; k < ops.length; k++) {
-    total = ops[k] === '-' ? total - nums[k + 1] : total + nums[k + 1];
+  function parseExpr(): number {
+    let result = parseTerm();
+    while (pos < s.length && (s[pos] === '+' || s[pos] === '-')) {
+      const op = s[pos++];
+      result = op === '+' ? result + parseTerm() : result - parseTerm();
+    }
+    return result;
   }
-  return total;
+
+  try {
+    const result = parseExpr();
+    return isNaN(result) ? 0 : result;
+  } catch {
+    return 0;
+  }
 }

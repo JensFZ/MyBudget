@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { X, Delete } from 'lucide-react';
-import { fmt } from '@/lib/format';
+import { fmt, evalAmount } from '@/lib/format';
 import { format } from 'date-fns';
 import { de } from 'date-fns/locale';
 
@@ -54,24 +54,47 @@ export default function TransactionForm({ open, onClose, onSaved }: TransactionF
     });
   }, [open]);
 
+  const OPERATORS = ['+', '−', '×', '÷'];
+
   function pressKey(key: string) {
     if (key === 'backspace') {
       setAmount(prev => prev.length <= 1 ? '0' : prev.slice(0, -1));
       return;
     }
-    if (key === ',' && amount.includes(',')) return;
-    if (amount === '0' && key !== ',') {
-      setAmount(key);
-    } else {
-      const parts = amount.split(',');
-      if (parts[1]?.length >= 2) return;
-      setAmount(prev => prev + key);
+
+    if (OPERATORS.includes(key)) {
+      setAmount(prev => {
+        if (prev === '0') return prev;
+        const last = prev[prev.length - 1];
+        if (OPERATORS.includes(last)) return prev.slice(0, -1) + key;
+        return prev + key;
+      });
+      return;
     }
+
+    if (key === ',') {
+      setAmount(prev => {
+        const segs = prev.split(/[+−×÷]/);
+        if (segs[segs.length - 1].includes(',')) return prev;
+        return prev + ',';
+      });
+      return;
+    }
+
+    // digit
+    setAmount(prev => {
+      const segs = prev.split(/[+−×÷]/);
+      const last = segs[segs.length - 1];
+      if (last === '0') return prev.slice(0, -1) + key;
+      const dec = last.split(',');
+      if (dec[1]?.length >= 2) return prev;
+      return prev + key;
+    });
   }
 
   async function handleSave() {
     if (!accountId) return;
-    const numeric = parseFloat(amount.replace(',', '.')) || 0;
+    const numeric = evalAmount(amount);
     const finalAmount = isExpense ? -Math.abs(numeric) : Math.abs(numeric);
 
     await fetch('/api/transactions', {
@@ -115,7 +138,8 @@ export default function TransactionForm({ open, onClose, onSaved }: TransactionF
 
   const selectedAccount = accounts.find(a => a.id === accountId);
   const selectedCategory = categories.find(c => c.id === categoryId);
-  const numericAmount = parseFloat(amount.replace(',', '.')) || 0;
+  const numericAmount = evalAmount(amount);
+  const hasCalc = /[+−×÷]/.test(amount);
 
   return (
     <>
@@ -143,9 +167,12 @@ export default function TransactionForm({ open, onClose, onSaved }: TransactionF
                 >
                   Ausgabe
                 </button>
-                <span className={`text-3xl font-bold ${isExpense ? 'text-red-500' : 'text-green-600'}`}>
-                  {isExpense ? '-' : '+'}{fmt(numericAmount)}
-                </span>
+                <div className="flex flex-col items-center">
+                  {hasCalc && <span className="text-sm text-gray-400 font-mono tracking-tight">{amount}</span>}
+                  <span className={`text-3xl font-bold ${isExpense ? 'text-red-500' : 'text-green-600'}`}>
+                    {isExpense ? '-' : '+'}{fmt(numericAmount)}
+                  </span>
+                </div>
                 <button
                   onClick={() => setIsExpense(false)}
                   className={`px-3 py-1 rounded-full text-xs font-medium ${!isExpense ? 'bg-green-100 text-green-600' : 'bg-gray-100 text-gray-500'}`}
@@ -231,17 +258,16 @@ export default function TransactionForm({ open, onClose, onSaved }: TransactionF
 
             {/* Numpad */}
             <div className="flex-1 grid grid-cols-4 gap-px bg-gray-100 mt-auto">
-              {['7','8','9','−','4','5','6','+','1','2','3','=','','0','backspace','done'].map(k => (
+              {['7','8','9','÷','4','5','6','×','1','2','3','−',',','0','+','backspace','done'].map(k => (
                 <button
                   key={k}
                   onClick={() => {
                     if (k === 'done') handleSave();
-                    else if (k === '=' || k === '−' || k === '+') return;
                     else pressKey(k === 'backspace' ? 'backspace' : k);
                   }}
                   className={`bg-white flex items-center justify-center text-lg font-medium py-4 active:bg-gray-50 ${
-                    k === 'done' ? 'bg-blue-600 text-white active:bg-blue-700' : ''
-                  } ${k === '' ? 'opacity-0 pointer-events-none' : ''}`}
+                    k === 'done' ? 'col-span-4 bg-blue-600 text-white active:bg-blue-700' : ''
+                  }`}
                 >
                   {k === 'backspace' ? <Delete size={18} /> : k === 'done' ? 'OK' : k}
                 </button>
