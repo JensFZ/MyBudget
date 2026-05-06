@@ -26,6 +26,12 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
   if ('goal_type' in body)   { fields.push('goal_type = ?');   values.push(body.goal_type ?? null); }
   if ('goal_date' in body)   { fields.push('goal_date = ?');   values.push(body.goal_date ?? null); }
   if ('is_hidden' in body)   { fields.push('is_hidden = ?');   values.push(body.is_hidden ? 1 : 0); }
+  if ('group_id' in body) {
+    const targetGroup = db.prepare('SELECT id FROM category_groups WHERE id = ? AND vault_id = ?').get(Number(body.group_id), ctx.vaultId);
+    if (!targetGroup) return NextResponse.json({ error: 'Invalid group' }, { status: 400 });
+    fields.push('group_id = ?');
+    values.push(Number(body.group_id));
+  }
 
   if (fields.length === 0) return NextResponse.json({ error: 'Nothing to update' }, { status: 400 });
 

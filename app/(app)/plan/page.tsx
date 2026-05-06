@@ -245,7 +245,10 @@ export default function PlanPage() {
   }
   for (const b of budgets) {
     const key = String(b.group_id);
-    if (groups[key]) groups[key].rows.push(b);
+    if (!groups[key]) {
+      groups[key] = { name: b.group_name ?? '(Keine Gruppe)', sort: 9999, rows: [], id: b.group_id, isHidden: false };
+    }
+    groups[key].rows.push(b);
   }
   const sortedGroups = Object.entries(groups).sort((a, b) => a[1].sort - b[1].sort);
   const overspentCount = budgets.filter(b => b.available < 0).length;
