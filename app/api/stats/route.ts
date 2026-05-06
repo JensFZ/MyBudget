@@ -81,7 +81,7 @@ export async function GET(req: NextRequest) {
   }
 
   const last10 = spendingAges.slice(-10);
-  const ageOfMoney: number | null = last10.length >= 10
+  const ageOfMoney: number | null = last10.length > 0
     ? Math.round(last10.reduce((a, b) => a + b, 0) / last10.length)
     : null;
 
