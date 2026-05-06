@@ -5,6 +5,7 @@ import { Check, X, Trash2, RefreshCw, CalendarCheck } from 'lucide-react';
 import { useI18n } from '@/lib/i18n';
 import { fmt, fmt2, evalAmount } from '@/lib/format';
 import type { Account, Category, CategoryGroup } from './InlineTransactionRow';
+import PayeeInput from '@/components/PayeeInput';
 
 export interface ScheduledTransaction {
   id: number;
@@ -212,11 +213,15 @@ export default function InlineScheduledRow({
           />
         </td>
         <td className="px-2 py-1.5 min-w-[150px]">
-          <input
+          <PayeeInput
             className={inputCls}
             placeholder={t('inline_payee_placeholder')}
             value={payee}
-            onChange={e => setPayee(e.target.value)}
+            onChange={setPayee}
+            onSelectPayee={(p, catId) => {
+              setPayee(p);
+              if (catId) setCatValue(`c:${catId}`);
+            }}
           />
         </td>
         <td className="px-2 py-1.5 min-w-[160px]">
