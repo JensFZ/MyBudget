@@ -177,7 +177,20 @@ export default function BudgetRow({
             value={editVal}
             onChange={e => setEditVal(e.target.value)}
             onBlur={handleBlur}
-            onKeyDown={e => { if (e.key === 'Enter') handleBlur(); if (e.key === 'Escape') setEditing(false); }}
+            onKeyDown={e => {
+              if (e.key === 'Enter') { handleBlur(); return; }
+              if (e.key === 'Escape') { setEditing(false); return; }
+              if (e.key === '+' || e.key === '-' || e.key === '*' || e.key === '/') {
+                const input = e.currentTarget;
+                const allSelected = input.selectionStart === 0 && input.selectionEnd === input.value.length && input.value.length > 0;
+                if (allSelected) {
+                  e.preventDefault();
+                  const newVal = input.value + e.key;
+                  setEditVal(newVal);
+                  setTimeout(() => input.setSelectionRange(newVal.length, newVal.length), 0);
+                }
+              }
+            }}
             onClick={e => e.stopPropagation()}
           />
         ) : (
