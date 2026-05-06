@@ -572,6 +572,22 @@ export default function PlanPage() {
                 </tr>
               )}
             </tbody>
+            <tfoot>
+              {(() => {
+                const totalAssigned = sortedGroups.reduce((s, [, g]) => s + g.rows.reduce((r, row) => r + row.assigned, 0), 0);
+                const totalActivity = sortedGroups.reduce((s, [, g]) => s + g.rows.reduce((r, row) => r + row.activity, 0), 0);
+                const totalAvail    = sortedGroups.reduce((s, [, g]) => s + g.rows.reduce((r, row) => r + row.available, 0), 0);
+                return (
+                  <tr className="border-t-2 border-gray-300 bg-gray-100">
+                    <td className="w-8 px-3 py-2" />
+                    <td className="px-3 py-2 text-xs font-bold uppercase tracking-wide text-gray-600">{t('plan_total')}</td>
+                    <td className="px-3 py-2 text-right text-xs font-bold text-gray-700">{totalAssigned !== 0 ? fmt(totalAssigned) : ''}</td>
+                    <td className={`px-3 py-2 text-right text-xs font-bold ${totalActivity < 0 ? 'text-red-600' : totalActivity > 0 ? 'text-green-700' : 'text-gray-700'}`}>{totalActivity !== 0 ? fmt(totalActivity) : ''}</td>
+                    <td className="px-3 py-2 text-right text-xs font-bold text-gray-700">{totalAvail !== 0 ? fmt(totalAvail) : ''}</td>
+                  </tr>
+                );
+              })()}
+            </tfoot>
           </table>
           </div>
 
