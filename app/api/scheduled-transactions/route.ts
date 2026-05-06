@@ -47,12 +47,12 @@ export async function POST(req: NextRequest) {
   if (!ctx) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
   const body = await req.json();
-  const { account_id, category_id, payee, memo, amount, frequency, date, cleared, flag } = body;
+  const { account_id, category_id, payee, memo, amount, frequency, date, next_date: nextDateParam, cleared, flag } = body;
 
   const account = db.prepare('SELECT id FROM accounts WHERE id = ? AND vault_id = ?').get(account_id, ctx.vaultId);
   if (!account) return NextResponse.json({ error: 'Invalid account' }, { status: 400 });
 
-  const next = nextDate(date, frequency as Frequency);
+  const next = nextDateParam ?? nextDate(date, frequency as Frequency);
 
   const result = db.prepare(`
     INSERT INTO scheduled_transactions

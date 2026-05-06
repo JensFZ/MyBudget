@@ -258,6 +258,9 @@ export default function AllAccountsPage() {
           onDelete={handleDelete}
           onBulkDelete={handleBulkDelete}
           onToggleCleared={handleToggleCleared}
+          addingScheduled={false}
+          onNewScheduledSaved={async () => {}}
+          onNewScheduledCancelled={() => {}}
           onBookScheduled={async () => {}}
           onSaveScheduled={async () => {}}
           onDeleteScheduled={() => {}}

@@ -6,6 +6,7 @@ import { Check, Circle, Trash2 } from 'lucide-react';
 import { useI18n } from '@/lib/i18n';
 import InlineTransactionRow, { Account, Category, CategoryGroup, SaveData } from '@/components/InlineTransactionRow';
 import InlineScheduledRow, { ScheduledTransaction, ScheduledUpdateData } from '@/components/InlineScheduledRow';
+import NewScheduledRow, { NewScheduledData } from '@/components/NewScheduledRow';
 
 interface Transaction {
   id: number;
@@ -34,6 +35,9 @@ interface Props {
   addingNew: boolean;
   onNewSaved: (data: SaveData) => Promise<void>;
   onNewCancelled: () => void;
+  addingScheduled: boolean;
+  onNewScheduledSaved: (data: NewScheduledData) => Promise<void>;
+  onNewScheduledCancelled: () => void;
   onSave: (id: number, data: SaveData) => Promise<void>;
   onDelete: (id: number) => void;
   onBulkDelete: (ids: number[]) => void;
@@ -61,6 +65,9 @@ export default function TransactionTable({
   addingNew,
   onNewSaved,
   onNewCancelled,
+  addingScheduled,
+  onNewScheduledSaved,
+  onNewScheduledCancelled,
   onSave,
   onDelete,
   onBulkDelete,
@@ -152,6 +159,19 @@ export default function TransactionTable({
         </tr>
       </thead>
       <tbody>
+        {/* New scheduled transaction form */}
+        {addingScheduled && (
+          <NewScheduledRow
+            showAccount={showAccount}
+            accounts={accounts}
+            categories={categories}
+            groups={groups}
+            defaultAccountId={defaultAccountId}
+            onCreate={async data => { await onNewScheduledSaved(data); }}
+            onCancel={onNewScheduledCancelled}
+          />
+        )}
+
         {/* Upcoming scheduled transactions */}
         {scheduledTransactions.map(st => (
           <InlineScheduledRow

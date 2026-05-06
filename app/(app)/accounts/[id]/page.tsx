@@ -11,6 +11,7 @@ import ImportDialog from '@/components/ImportDialog';
 import BankConnectionDialog from '@/components/BankConnectionDialog';
 import type { Account, Category, CategoryGroup, SaveData } from '@/components/InlineTransactionRow';
 import type { ScheduledTransaction, ScheduledUpdateData } from '@/components/InlineScheduledRow';
+import type { NewScheduledData } from '@/components/NewScheduledRow';
 
 type Filter = 'all' | 'uncleared' | 'needs_category';
 
@@ -53,6 +54,7 @@ export default function AccountPage({ params }: { params: Promise<{ id: string }
   const [groups, setGroups] = useState<CategoryGroup[]>([]);
   const [scheduledTransactions, setScheduledTransactions] = useState<ScheduledTransaction[]>([]);
   const [addingNew, setAddingNew] = useState(false);
+  const [addingScheduled, setAddingScheduled] = useState(false);
   const [showImport, setShowImport] = useState(false);
   const [search, setSearch] = useState('');
   const [showSearch, setShowSearch] = useState(false);
@@ -161,6 +163,24 @@ export default function AccountPage({ params }: { params: Promise<{ id: string }
     loadScheduledTransactions();
   }
 
+  async function handleNewScheduledSaved(data: NewScheduledData) {
+    await fetch('/api/scheduled-transactions', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        account_id: data.account_id,
+        category_id: data.category_id,
+        payee: data.payee,
+        memo: data.memo,
+        amount: data.amount,
+        frequency: data.frequency,
+        next_date: data.next_date,
+      }),
+    });
+    setAddingScheduled(false);
+    loadScheduledTransactions();
+  }
+
   async function handleNewSaved(data: SaveData) {
     await fetch('/api/transactions', {
       method: 'POST',
@@ -170,6 +190,7 @@ export default function AccountPage({ params }: { params: Promise<{ id: string }
     setAddingNew(false);
     loadAccount();
     loadTransactions();
+    loadScheduledTransactions();
     notifySidebar();
   }
 
@@ -431,10 +452,16 @@ export default function AccountPage({ params }: { params: Promise<{ id: string }
       {/* Toolbar */}
       <div className="flex flex-wrap items-center gap-2 px-4 md:px-6 py-2 bg-white border-b shrink-0">
         <button
-          onClick={() => setAddingNew(true)}
+          onClick={() => { setAddingNew(true); setAddingScheduled(false); }}
           className="flex items-center gap-1 bg-blue-600 text-white text-sm rounded-lg px-3 py-1.5 hover:bg-blue-700"
         >
           <Plus size={14} /> {t('accounts_add_transaction')}
+        </button>
+        <button
+          onClick={() => { setAddingScheduled(true); setAddingNew(false); }}
+          className="flex items-center gap-1 text-sm text-green-700 border border-green-300 rounded-lg px-3 py-1.5 hover:bg-green-50"
+        >
+          <RotateCw size={14} /> {t('accounts_add_scheduled')}
         </button>
         {isCredit && (
           <button className="flex items-center gap-1 text-sm text-gray-600 border border-gray-200 rounded-lg px-3 py-1.5 hover:bg-gray-50">
@@ -559,6 +586,9 @@ export default function AccountPage({ params }: { params: Promise<{ id: string }
           addingNew={addingNew}
           onNewSaved={handleNewSaved}
           onNewCancelled={() => setAddingNew(false)}
+          addingScheduled={addingScheduled}
+          onNewScheduledSaved={handleNewScheduledSaved}
+          onNewScheduledCancelled={() => setAddingScheduled(false)}
           onSave={handleSave}
           onDelete={handleDelete}
           onBulkDelete={handleBulkDelete}
