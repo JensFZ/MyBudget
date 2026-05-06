@@ -21,6 +21,8 @@ const t: TranslationSet = {
   sidebar_account_group_cash: 'Gotówka',
   sidebar_account_group_credit: 'Karty kredytowe',
   sidebar_account_group_tracking: 'Śledzenie',
+  sidebar_account_group_loans_received: 'Zaciągnięte kredyty',
+  sidebar_account_group_loans_granted: 'Udzielone kredyty',
   sidebar_account_group_closed: 'Zamknięte',
 
   // Settings
@@ -246,8 +248,10 @@ const t: TranslationSet = {
   acct_real_estate_desc: 'Śledzenie wartości nieruchomości',
   acct_vehicle: 'Pojazd',
   acct_vehicle_desc: 'Samochód lub pojazd',
-  acct_loan: 'Pożyczka',
-  acct_loan_desc: 'Hipoteka, pożyczka osobista lub dług',
+  acct_loan_received: 'Zaciągnięty kredyt',
+  acct_loan_received_desc: 'Hipoteka, pożyczka osobista lub dług który masz',
+  acct_loan_granted: 'Udzielony kredyt',
+  acct_loan_granted_desc: 'Pieniądze które pożyczyłeś komuś innemu',
 
   // Filter bar
   filter_all: 'Wszystkie',

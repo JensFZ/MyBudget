@@ -21,6 +21,8 @@ const t: TranslationSet = {
   sidebar_account_group_cash: 'Cash',
   sidebar_account_group_credit: 'Credit',
   sidebar_account_group_tracking: 'Tracking',
+  sidebar_account_group_loans_received: 'Received Loans',
+  sidebar_account_group_loans_granted: 'Granted Loans',
   sidebar_account_group_closed: 'Closed',
 
   // Settings
@@ -246,8 +248,10 @@ const t: TranslationSet = {
   acct_real_estate_desc: 'Property value tracking',
   acct_vehicle: 'Vehicle',
   acct_vehicle_desc: 'Car or vehicle value',
-  acct_loan: 'Loan',
-  acct_loan_desc: 'Mortgage, personal loan, or debt owed',
+  acct_loan_received: 'Received Loan',
+  acct_loan_received_desc: 'Mortgage, personal loan, or debt you owe',
+  acct_loan_granted: 'Granted Loan',
+  acct_loan_granted_desc: 'Money you have lent to someone else',
 
   // Filter bar
   filter_all: 'All',

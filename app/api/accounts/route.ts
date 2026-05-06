@@ -14,9 +14,9 @@ export async function GET(req: NextRequest) {
 export async function POST(req: NextRequest) {
   const ctx = await resolveVault(req);
   if (!ctx) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  const { name, type, balance, on_budget } = await req.json();
+  const { name, type, balance, on_budget, subtype } = await req.json();
   const result = db.prepare(
-    'INSERT INTO accounts (name, type, balance, on_budget, vault_id) VALUES (?, ?, ?, ?, ?) RETURNING *'
-  ).get(name, type, balance ?? 0, on_budget ?? 1, ctx.vaultId);
+    'INSERT INTO accounts (name, type, balance, on_budget, vault_id, subtype) VALUES (?, ?, ?, ?, ?, ?) RETURNING *'
+  ).get(name, type, balance ?? 0, on_budget ?? 1, ctx.vaultId, subtype ?? null);
   return NextResponse.json(result, { status: 201 });
 }

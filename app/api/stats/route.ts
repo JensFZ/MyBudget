@@ -35,7 +35,7 @@ export async function GET(req: NextRequest) {
   });
 
   const accounts = db.prepare(
-    "SELECT balance FROM accounts WHERE vault_id = ? AND type != 'closed'"
+    "SELECT balance FROM accounts WHERE vault_id = ? AND type != 'closed' AND COALESCE(subtype,'') NOT IN ('loan_received','loan_granted')"
   ).all(ctx.vaultId) as { balance: number }[];
   const assets = accounts.filter(a => a.balance > 0).reduce((s, a) => s + a.balance, 0);
   const debts = accounts.filter(a => a.balance < 0).reduce((s, a) => s + a.balance, 0);

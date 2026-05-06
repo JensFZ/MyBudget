@@ -21,6 +21,8 @@ const t: TranslationSet = {
   sidebar_account_group_cash: 'Bargeld',
   sidebar_account_group_credit: 'Kreditkarten',
   sidebar_account_group_tracking: 'Verfolgung',
+  sidebar_account_group_loans_received: 'Aufgenommene Kredite',
+  sidebar_account_group_loans_granted: 'Gewährte Kredite',
   sidebar_account_group_closed: 'Geschlossen',
 
   // Settings
@@ -246,8 +248,10 @@ const t: TranslationSet = {
   acct_real_estate_desc: 'Grundstücks- oder Immobilienwert',
   acct_vehicle: 'Fahrzeug',
   acct_vehicle_desc: 'Auto oder Fahrzeugwert',
-  acct_loan: 'Kredit',
-  acct_loan_desc: 'Hypothek, Privatkredit oder Schulden',
+  acct_loan_received: 'Aufgenommener Kredit',
+  acct_loan_received_desc: 'Kredit, Hypothek oder Schulden die du aufgenommen hast',
+  acct_loan_granted: 'Gewährter Kredit',
+  acct_loan_granted_desc: 'Geld das du an jemand anderen verliehen hast',
 
   // Filter bar
   filter_all: 'Alle',

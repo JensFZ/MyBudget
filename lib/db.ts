@@ -91,6 +91,7 @@ const migrations: string[] = [
     vault_id INTEGER REFERENCES vaults(id),
     created_at TEXT DEFAULT (datetime('now'))
   )`,
+  `ALTER TABLE accounts ADD COLUMN subtype TEXT`,
 ];
 for (const sql of migrations) {
   try { db.exec(sql); } catch { /* already exists */ }
