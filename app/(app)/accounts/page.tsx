@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { fmt } from '@/lib/format';
+import { fmt, localToday } from '@/lib/format';
 import { useI18n } from '@/lib/i18n';
 import { Plus, FileUp, RotateCcw, RotateCw, Search, X } from 'lucide-react';
 import TransactionTable from '@/components/TransactionTable';
@@ -60,6 +60,17 @@ export default function AllAccountsPage() {
   }, []);
 
   useEffect(() => {
+    fetch('/api/scheduled-transactions/book-due', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ today: localToday() }),
+    }).then(r => r.json()).then(({ booked }) => {
+      if (booked > 0) {
+        loadTransactions();
+        window.dispatchEvent(new CustomEvent('accounts-updated'));
+      }
+    }).catch(() => {});
+
     loadTransactions();
     fetch('/api/accounts').then(r => r.json()).then(setAccounts).catch(() => {});
     fetch('/api/categories').then(r => r.json()).then((d: { groups: CategoryGroup[]; categories: Category[] }) => {

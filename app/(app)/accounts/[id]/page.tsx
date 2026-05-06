@@ -118,9 +118,22 @@ export default function AccountPage({ params }: { params: Promise<{ id: string }
   }, [id]);
 
   useEffect(() => {
+    // Auto-book any scheduled transactions that are due
+    fetch('/api/scheduled-transactions/book-due', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ today: localToday() }),
+    }).then(r => r.json()).then(({ booked }) => {
+      if (booked > 0) {
+        loadAccount();
+        loadTransactions();
+        notifySidebar();
+      }
+      loadScheduledTransactions();
+    }).catch(() => loadScheduledTransactions());
+
     loadAccount();
     loadTransactions();
-    loadScheduledTransactions();
     loadBankConn();
     fetch('/api/accounts').then(r => r.json()).then(setAccounts).catch(() => {});
     fetch('/api/categories').then(r => r.json()).then((d: { groups: CategoryGroup[]; categories: Category[] }) => {
