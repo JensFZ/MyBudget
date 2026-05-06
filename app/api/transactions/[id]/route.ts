@@ -58,12 +58,25 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
         db.prepare('UPDATE accounts SET balance = balance + ? WHERE id = ?').run(pairedAmount, body.transfer_account_id);
       }
     }
-  } else if (amountChanged && oldPaired) {
-    // Amount changed on existing transfer — update paired
-    const pairedNewAmount = -newAmount;
-    const pairedDelta = pairedNewAmount - oldPaired.amount;
-    db.prepare('UPDATE accounts SET balance = balance + ? WHERE id = ?').run(pairedDelta, oldPaired.account_id);
-    db.prepare('UPDATE transactions SET amount = ? WHERE id = ?').run(pairedNewAmount, oldPaired.id);
+  } else if (oldPaired) {
+    const pairedFields: string[] = [];
+    const pairedValues: (string | number | null)[] = [];
+
+    if (amountChanged) {
+      const pairedNewAmount = -newAmount;
+      const pairedDelta = pairedNewAmount - oldPaired.amount;
+      db.prepare('UPDATE accounts SET balance = balance + ? WHERE id = ?').run(pairedDelta, oldPaired.account_id);
+      pairedFields.push('amount = ?');
+      pairedValues.push(pairedNewAmount);
+    }
+    if (body.date !== undefined) {
+      pairedFields.push('date = ?');
+      pairedValues.push(body.date);
+    }
+    if (pairedFields.length > 0) {
+      pairedValues.push(oldPaired.id);
+      db.prepare(`UPDATE transactions SET ${pairedFields.join(', ')} WHERE id = ?`).run(...pairedValues);
+    }
   }
 
   // Update source account balance if amount changed
