@@ -53,8 +53,9 @@ function parseCategoryValue(val: string): { category_id: number | null; transfer
   return { category_id: null, transfer_account_id: null };
 }
 
-function toCategoryValue(category_id: number | null): string {
+function toCategoryValue(category_id: number | null, amount?: number): string {
   if (category_id) return `c:${category_id}`;
+  if (!amount || amount > 0) return 'income:';
   return '';
 }
 
@@ -74,7 +75,7 @@ export default function InlineScheduledRow({
   const { t } = useI18n();
   const [date, setDate] = useState(scheduled.next_date);
   const [payee, setPayee] = useState(scheduled.payee ?? '');
-  const [catValue, setCatValue] = useState(toCategoryValue(scheduled.category_id));
+  const [catValue, setCatValue] = useState(toCategoryValue(scheduled.category_id, scheduled.amount));
   const [memo, setMemo] = useState(scheduled.memo ?? '');
   const [outflow, setOutflow] = useState(scheduled.amount < 0 ? Math.abs(scheduled.amount).toFixed(2).replace('.', ',') : '');
   const [inflow, setInflow] = useState(scheduled.amount > 0 ? scheduled.amount.toFixed(2).replace('.', ',') : '');
@@ -90,7 +91,7 @@ export default function InlineScheduledRow({
   useEffect(() => {
     setDate(scheduled.next_date);
     setPayee(scheduled.payee ?? '');
-    setCatValue(toCategoryValue(scheduled.category_id));
+    setCatValue(toCategoryValue(scheduled.category_id, scheduled.amount));
     setMemo(scheduled.memo ?? '');
     setOutflow(scheduled.amount < 0 ? Math.abs(scheduled.amount).toFixed(2).replace('.', ',') : '');
     setInflow(scheduled.amount > 0 ? scheduled.amount.toFixed(2).replace('.', ',') : '');
@@ -161,6 +162,8 @@ export default function InlineScheduledRow({
               {cat?.color && <span className="w-2 h-2 rounded-full shrink-0 inline-block" style={{ backgroundColor: cat.color }} />}
               <span className="text-gray-500">{catName}</span>
             </span>
+          ) : scheduled.amount > 0 ? (
+            <span className="text-xs text-green-600 bg-green-50 px-2 py-0.5 rounded">{t('tx_income_label')}</span>
           ) : (
             <span className="text-gray-400">{t('inline_no_category')}</span>
           )}
@@ -222,6 +225,7 @@ export default function InlineScheduledRow({
             value={catValue}
             onChange={e => setCatValue(e.target.value)}
           >
+            <option value="income:">{t('tx_income_label')}</option>
             <option value="">{t('inline_no_category')}</option>
             {groups.map(g => (
               <optgroup key={g.id} label={g.name}>
