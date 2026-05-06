@@ -5,6 +5,7 @@ import { useState } from 'react';
 import { Check, Circle, Trash2 } from 'lucide-react';
 import { useI18n } from '@/lib/i18n';
 import InlineTransactionRow, { Account, Category, CategoryGroup, SaveData } from '@/components/InlineTransactionRow';
+import InlineScheduledRow, { ScheduledTransaction, ScheduledUpdateData } from '@/components/InlineScheduledRow';
 
 interface Transaction {
   id: number;
@@ -24,6 +25,7 @@ interface Transaction {
 
 interface Props {
   transactions: Transaction[];
+  scheduledTransactions: ScheduledTransaction[];
   showAccount: boolean;
   accounts: Account[];
   categories: Category[];
@@ -36,6 +38,9 @@ interface Props {
   onDelete: (id: number) => void;
   onBulkDelete: (ids: number[]) => void;
   onToggleCleared: (id: number, cleared: number) => void;
+  onBookScheduled: (id: number, date: string) => Promise<void>;
+  onSaveScheduled: (id: number, data: ScheduledUpdateData) => Promise<void>;
+  onDeleteScheduled: (id: number) => void;
 }
 
 function formatDate(dateStr: string) {
@@ -47,6 +52,7 @@ const ACTION_COL = 1;
 
 export default function TransactionTable({
   transactions,
+  scheduledTransactions,
   showAccount,
   accounts,
   categories,
@@ -59,13 +65,18 @@ export default function TransactionTable({
   onDelete,
   onBulkDelete,
   onToggleCleared,
+  onBookScheduled,
+  onSaveScheduled,
+  onDeleteScheduled,
 }: Props) {
   const { t } = useI18n();
   const [editingId, setEditingId] = useState<number | null>(null);
+  const [editingScheduledId, setEditingScheduledId] = useState<number | null>(null);
   const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
 
   function handleRowClick(id: number) {
     if (editingId === id) return;
+    setEditingScheduledId(null);
     setEditingId(id);
   }
 
@@ -141,6 +152,24 @@ export default function TransactionTable({
         </tr>
       </thead>
       <tbody>
+        {/* Upcoming scheduled transactions */}
+        {scheduledTransactions.map(st => (
+          <InlineScheduledRow
+            key={`sched-${st.id}`}
+            scheduled={st}
+            showAccount={showAccount}
+            accounts={accounts}
+            categories={categories}
+            groups={groups}
+            isEditing={editingScheduledId === st.id}
+            onEdit={() => { setEditingId(null); setEditingScheduledId(st.id); }}
+            onCancelEdit={() => setEditingScheduledId(null)}
+            onBook={async (id, date) => { setEditingScheduledId(null); await onBookScheduled(id, date); }}
+            onSave={onSaveScheduled}
+            onDelete={id => { setEditingScheduledId(null); onDeleteScheduled(id); }}
+          />
+        ))}
+
         {/* New row at top */}
         {addingNew && (
           <InlineTransactionRow

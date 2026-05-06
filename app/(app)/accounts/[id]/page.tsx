@@ -10,6 +10,7 @@ import TransactionTable from '@/components/TransactionTable';
 import ImportDialog from '@/components/ImportDialog';
 import BankConnectionDialog from '@/components/BankConnectionDialog';
 import type { Account, Category, CategoryGroup, SaveData } from '@/components/InlineTransactionRow';
+import type { ScheduledTransaction, ScheduledUpdateData } from '@/components/InlineScheduledRow';
 
 type Filter = 'all' | 'uncleared' | 'needs_category';
 
@@ -50,6 +51,7 @@ export default function AccountPage({ params }: { params: Promise<{ id: string }
   const [accounts, setAccounts] = useState<Account[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [groups, setGroups] = useState<CategoryGroup[]>([]);
+  const [scheduledTransactions, setScheduledTransactions] = useState<ScheduledTransaction[]>([]);
   const [addingNew, setAddingNew] = useState(false);
   const [showImport, setShowImport] = useState(false);
   const [search, setSearch] = useState('');
@@ -105,19 +107,58 @@ export default function AccountPage({ params }: { params: Promise<{ id: string }
     setTransactions(await res.json());
   }, [id]);
 
+  const loadScheduledTransactions = useCallback(async () => {
+    const res = await fetch('/api/scheduled-transactions');
+    if (res.ok) {
+      const all: ScheduledTransaction[] = await res.json();
+      setScheduledTransactions(all.filter(st => st.account_id === Number(id)));
+    }
+  }, [id]);
+
   useEffect(() => {
     loadAccount();
     loadTransactions();
+    loadScheduledTransactions();
     loadBankConn();
     fetch('/api/accounts').then(r => r.json()).then(setAccounts).catch(() => {});
     fetch('/api/categories').then(r => r.json()).then((d: { groups: CategoryGroup[]; categories: Category[] }) => {
       setGroups(d.groups);
       setCategories(d.categories);
     }).catch(() => {});
-  }, [loadAccount, loadTransactions, loadBankConn]);
+  }, [loadAccount, loadTransactions, loadScheduledTransactions, loadBankConn]);
 
   function notifySidebar() {
     window.dispatchEvent(new CustomEvent('accounts-updated'));
+  }
+
+  async function handleBookScheduled(stId: number, date: string) {
+    await fetch(`/api/scheduled-transactions/${stId}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ date }),
+    });
+    loadAccount();
+    loadTransactions();
+    loadScheduledTransactions();
+    notifySidebar();
+  }
+
+  async function handleSaveScheduled(stId: number, data: ScheduledUpdateData) {
+    await fetch(`/api/scheduled-transactions/${stId}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
+    });
+    loadScheduledTransactions();
+  }
+
+  async function handleDeleteScheduled(stId: number) {
+    await fetch('/api/scheduled-transactions', {
+      method: 'DELETE',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id: stId }),
+    });
+    loadScheduledTransactions();
   }
 
   async function handleNewSaved(data: SaveData) {
@@ -509,6 +550,7 @@ export default function AccountPage({ params }: { params: Promise<{ id: string }
       <div className="flex-1 overflow-y-auto bg-white">
         <TransactionTable
           transactions={filtered}
+          scheduledTransactions={scheduledTransactions}
           showAccount={false}
           accounts={accounts}
           categories={categories}
@@ -521,6 +563,9 @@ export default function AccountPage({ params }: { params: Promise<{ id: string }
           onDelete={handleDelete}
           onBulkDelete={handleBulkDelete}
           onToggleCleared={handleToggleCleared}
+          onBookScheduled={handleBookScheduled}
+          onSaveScheduled={handleSaveScheduled}
+          onDeleteScheduled={handleDeleteScheduled}
         />
       </div>
 

@@ -140,6 +140,9 @@ const t: TranslationSet = {
   tx_selected_count: '{count} ausgewählt',
   tx_delete_selected: 'Löschen',
   tx_deselect_all: 'Auswahl aufheben',
+  tx_book_now: 'Einbuchen',
+  tx_scheduled_save_template: 'Vorlage speichern',
+  tx_scheduled_edit_hint: 'Klicken zum Bearbeiten der Vorlage',
 
   // InlineTransactionRow
   inline_no_category: '— Keine Kategorie —',

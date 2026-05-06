@@ -140,6 +140,9 @@ const t: TranslationSet = {
   tx_selected_count: '{count} zaznaczono',
   tx_delete_selected: 'Usuń',
   tx_deselect_all: 'Odznacz wszystko',
+  tx_book_now: 'Zaksięguj',
+  tx_scheduled_save_template: 'Zapisz szablon',
+  tx_scheduled_edit_hint: 'Kliknij aby edytować szablon',
 
   // InlineTransactionRow
   inline_no_category: '— Brak kategorii —',

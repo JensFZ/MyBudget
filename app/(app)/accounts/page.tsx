@@ -246,6 +246,7 @@ export default function AllAccountsPage() {
       <div className="flex-1 overflow-y-auto bg-white">
         <TransactionTable
           transactions={filtered}
+          scheduledTransactions={[]}
           showAccount={true}
           accounts={accounts}
           categories={categories}
@@ -257,6 +258,9 @@ export default function AllAccountsPage() {
           onDelete={handleDelete}
           onBulkDelete={handleBulkDelete}
           onToggleCleared={handleToggleCleared}
+          onBookScheduled={async () => {}}
+          onSaveScheduled={async () => {}}
+          onDeleteScheduled={() => {}}
         />
       </div>
 

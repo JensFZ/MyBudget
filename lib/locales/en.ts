@@ -140,6 +140,9 @@ const t: TranslationSet = {
   tx_selected_count: '{count} selected',
   tx_delete_selected: 'Delete',
   tx_deselect_all: 'Deselect all',
+  tx_book_now: 'Book now',
+  tx_scheduled_save_template: 'Save template',
+  tx_scheduled_edit_hint: 'Click to edit template',
 
   // InlineTransactionRow
   inline_no_category: '— No category —',
