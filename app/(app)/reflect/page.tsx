@@ -15,6 +15,7 @@ interface StatsData {
   debts: number;
   loansReceived: number;
   loansGranted: number;
+  ageOfMoney: number | null;
 }
 
 function defaultRange(): { from: string; to: string } {
@@ -94,6 +95,24 @@ export default function ReflectPage() {
               <p className="text-xs text-gray-400 mt-2">{t('reflect_loans_hint')}</p>
             )}
           </div>
+
+          {/* Age of Money */}
+          {stats.ageOfMoney !== null && (
+            <div className="bg-white rounded-xl border border-gray-200 p-6">
+              <p className="text-xs text-gray-500 uppercase tracking-wide mb-1">{t('reflect_age_of_money')}</p>
+              <div className="flex items-end gap-2">
+                <span className={`text-4xl font-bold ${
+                  stats.ageOfMoney >= 30 ? 'text-green-600'
+                  : stats.ageOfMoney >= 15 ? 'text-yellow-500'
+                  : 'text-orange-500'
+                }`}>
+                  {stats.ageOfMoney}
+                </span>
+                <span className="text-gray-400 text-lg mb-0.5">{t('reflect_age_days')}</span>
+              </div>
+              <p className="text-xs text-gray-400 mt-2">{t('reflect_age_desc')}</p>
+            </div>
+          )}
 
           {/* Charts */}
           <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
