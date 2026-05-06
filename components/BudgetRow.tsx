@@ -1,6 +1,6 @@
 'use client';
 
-import { fmt } from '@/lib/format';
+import { fmt, evalAmount } from '@/lib/format';
 import { useState, useEffect, useRef } from 'react';
 import { Clock, CheckCircle2, Archive, Trash2, RotateCcw, Pencil } from 'lucide-react';
 import { useI18n } from '@/lib/i18n';
@@ -48,8 +48,8 @@ export default function BudgetRow({
 
   function handleBlur() {
     setEditing(false);
-    const numeric = parseFloat(editVal.replace(',', '.'));
-    if (!isNaN(numeric) && numeric !== assigned) onAssignChange(categoryId, month, numeric);
+    const numeric = evalAmount(editVal);
+    if (numeric !== assigned) onAssignChange(categoryId, month, numeric);
   }
 
   function handleAssignClick(e: React.MouseEvent) {
