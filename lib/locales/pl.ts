@@ -78,6 +78,7 @@ const t: TranslationSet = {
   plan_col_assigned: 'Przypisano',
   plan_col_activity: 'Aktywność',
   plan_col_available: 'Dostępne',
+  plan_total: 'Suma',
   plan_rename: 'Zmień nazwę',
   plan_show_archived: 'Pokaż zarchiwizowane',
   plan_bulk_scope_all: 'Wszystkie kategorie',
