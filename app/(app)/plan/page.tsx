@@ -399,7 +399,9 @@ export default function PlanPage() {
               {sortedGroups.map(([key, group]) => {
                 const filtered = filterRows(group.rows);
                 if (filter !== 'all' && filtered.length === 0) return null;
-                const groupAvail = group.rows.reduce((s, r) => s + r.available, 0);
+                const groupAvail    = group.rows.reduce((s, r) => s + r.available, 0);
+                const groupAssigned = group.rows.reduce((s, r) => s + r.assigned,  0);
+                const groupActivity = group.rows.reduce((s, r) => s + r.activity,  0);
                 const isAddingHere = addingCategoryToGroup === group.id;
 
                 return (
@@ -483,8 +485,16 @@ export default function PlanPage() {
                           </div>
                         </div>
                       </td>
-                      <td className="px-3 py-2" />
-                      <td className="px-3 py-2" />
+                      <td className="px-3 py-2 text-right">
+                        <span className="text-xs font-medium text-gray-500">
+                          {groupAssigned !== 0 ? fmt(groupAssigned) : ''}
+                        </span>
+                      </td>
+                      <td className="px-3 py-2 text-right">
+                        <span className={`text-xs font-medium ${groupActivity < 0 ? 'text-red-500' : groupActivity > 0 ? 'text-green-600' : 'text-gray-500'}`}>
+                          {groupActivity !== 0 ? fmt(groupActivity) : ''}
+                        </span>
+                      </td>
                       <td className="px-3 py-2 text-right">
                         <span className="text-xs font-medium text-gray-500">
                           {groupAvail !== 0 ? fmt(groupAvail) : ''}
