@@ -260,6 +260,8 @@ export default function TransactionTable({
                   <span className="inline-block bg-orange-100 text-orange-700 text-xs px-2 py-0.5 rounded">
                     {t('tx_needs_category')}
                   </span>
+                ) : !tx.category_id && tx.amount > 0 ? (
+                  <span className="text-xs text-green-600 bg-green-50 px-2 py-0.5 rounded">{t('tx_income_label')}</span>
                 ) : tx.category_name ? (
                   <span className="flex items-center gap-1.5">
                     {(() => {

@@ -145,6 +145,7 @@ const t: TranslationSet = {
   tx_scheduled_edit_hint: 'Click to edit template',
 
   // InlineTransactionRow
+  tx_income_label: 'Income',
   inline_no_category: '— No category —',
   inline_transfer_group: '── Transfer to Account ──',
   inline_transfer_to: 'Transfer: {name}',

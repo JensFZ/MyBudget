@@ -64,12 +64,15 @@ const today = new Date().toISOString().slice(0, 10);
 function parseCategoryValue(val: string): { category_id: number | null; transfer_account_id: number | null } {
   if (val.startsWith('t:')) return { category_id: null, transfer_account_id: Number(val.slice(2)) };
   if (val.startsWith('c:')) return { category_id: Number(val.slice(2)), transfer_account_id: null };
+  // 'income:' sentinel → no category, not a transfer
   return { category_id: null, transfer_account_id: null };
 }
 
-function toCategoryValue(category_id: number | null, transfer_account_id: number | null): string {
+function toCategoryValue(category_id: number | null, transfer_account_id: number | null, amount?: number): string {
   if (transfer_account_id) return `t:${transfer_account_id}`;
   if (category_id) return `c:${category_id}`;
+  // Default to income sentinel for inflows (amount > 0 or unknown)
+  if (!amount || amount > 0) return 'income:';
   return '';
 }
 
@@ -88,7 +91,7 @@ export default function InlineTransactionRow({
   const { t } = useI18n();
 
   const initAccountId = initial?.account_id ?? defaultAccountId ?? accounts[0]?.id ?? 0;
-  const initCatVal = toCategoryValue(initial?.category_id ?? null, initial?.transfer_account_id ?? null);
+  const initCatVal = toCategoryValue(initial?.category_id ?? null, initial?.transfer_account_id ?? null, initial?.amount);
   const initAmount = initial?.amount ?? 0;
 
   const [accountId, setAccountId] = useState(String(initAccountId));
@@ -232,6 +235,7 @@ export default function InlineTransactionRow({
           value={catValue}
           onChange={e => setCatValue(e.target.value)}
         >
+          <option value="income:">{t('tx_income_label')}</option>
           <option value="">{t('inline_no_category')}</option>
           {groups.map(g => (
             <optgroup key={g.id} label={g.name}>
