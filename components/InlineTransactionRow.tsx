@@ -112,7 +112,7 @@ export default function InlineTransactionRow({
 
   function makeAmountKeyDown(setValue: (v: string) => void, clearOther: () => void) {
     return (e: React.KeyboardEvent<HTMLInputElement>) => {
-      if (e.key === '+' || e.key === '-') {
+      if (e.key === '+' || e.key === '-' || e.key === '*' || e.key === '/') {
         const input = e.currentTarget;
         const allSelected = input.selectionStart === 0 && input.selectionEnd === input.value.length && input.value.length > 0;
         if (allSelected) {
