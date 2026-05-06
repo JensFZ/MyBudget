@@ -45,7 +45,7 @@ type FilterType = 'all' | 'overspent' | 'underfunded' | 'overfunded' | 'availabl
 export default function PlanPage() {
   const { t, tMonthShort, tMonthLong } = useI18n();
   const [data, setData] = useState<BudgetData | null>(null);
-  const [month, setMonth] = useState('2026-04');
+  const [month, setMonth] = useState(() => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`; });
   const [collapsed, setCollapsed] = useState<Record<string, boolean>>({});
   const [showMonthPicker, setShowMonthPicker] = useState(false);
   const monthPickerRef = useRef<HTMLDivElement>(null);
