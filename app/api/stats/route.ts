@@ -40,5 +40,11 @@ export async function GET(req: NextRequest) {
   const assets = accounts.filter(a => a.balance > 0).reduce((s, a) => s + a.balance, 0);
   const debts = accounts.filter(a => a.balance < 0).reduce((s, a) => s + a.balance, 0);
 
-  return NextResponse.json({ monthly, netWorth: assets + debts, assets, debts, ageOfMoney: 125 });
+  const loanAccounts = db.prepare(
+    "SELECT name, balance, subtype FROM accounts WHERE vault_id = ? AND COALESCE(subtype,'') IN ('loan_received','loan_granted') AND type != 'closed'"
+  ).all(ctx.vaultId) as { name: string; balance: number; subtype: string }[];
+  const loansReceived = loanAccounts.filter(a => a.subtype === 'loan_received').reduce((s, a) => s + a.balance, 0);
+  const loansGranted  = loanAccounts.filter(a => a.subtype === 'loan_granted').reduce((s, a) => s + a.balance, 0);
+
+  return NextResponse.json({ monthly, netWorth: assets + debts, assets, debts, loansReceived, loansGranted });
 }

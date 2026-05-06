@@ -13,6 +13,8 @@ interface StatsData {
   netWorth: number;
   assets: number;
   debts: number;
+  loansReceived: number;
+  loansGranted: number;
 }
 
 function defaultRange(): { from: string; to: string } {
@@ -68,6 +70,25 @@ export default function ReflectPage() {
                 <p className="text-lg font-semibold text-red-500">{fmt(stats.debts)}</p>
               </div>
             </div>
+            {(stats.loansReceived !== 0 || stats.loansGranted !== 0) && (
+              <div className="mt-4 pt-4 border-t border-gray-100">
+                <p className="text-xs text-gray-400 uppercase tracking-wide mb-2">{t('reflect_loans_section')}</p>
+                <div className="flex gap-8">
+                  {stats.loansReceived !== 0 && (
+                    <div>
+                      <p className="text-xs text-gray-400 mb-0.5">{t('reflect_loans_received')}</p>
+                      <p className="text-base font-semibold text-red-400">{fmt(stats.loansReceived)}</p>
+                    </div>
+                  )}
+                  {stats.loansGranted !== 0 && (
+                    <div>
+                      <p className="text-xs text-gray-400 mb-0.5">{t('reflect_loans_granted')}</p>
+                      <p className="text-base font-semibold text-blue-500">{fmt(stats.loansGranted)}</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Charts */}
