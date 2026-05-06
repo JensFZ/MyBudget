@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { fmt } from '@/lib/format';
 import { useI18n } from '@/lib/i18n';
-import { ChevronDown, ChevronRight, Plus, X, RotateCcw, RotateCw, Archive, Trash2, Pencil } from 'lucide-react';
+import { ChevronDown, ChevronRight, Plus, X, RotateCcw, Archive, Trash2, Pencil } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import BudgetRow from '@/components/BudgetRow';
@@ -374,15 +374,6 @@ export default function PlanPage() {
       <div className="flex flex-1 overflow-hidden">
         {/* Budget table area */}
         <div className="flex-1 overflow-y-auto">
-          {/* Table toolbar */}
-          <div className="flex items-center gap-2 px-6 py-2 bg-white border-b sticky top-0 z-10">
-            <button className="flex items-center gap-1 text-sm text-gray-600 hover:text-gray-900 border border-gray-200 rounded px-2 py-1">
-              {t('plan_category_group')} <ChevronDown size={12} />
-            </button>
-            <button className="p-1 text-gray-400 hover:text-gray-700"><RotateCcw size={14} /></button>
-            <button className="p-1 text-gray-400 hover:text-gray-700"><RotateCw size={14} /></button>
-          </div>
-
           {/* Budget table */}
           <div className="overflow-x-auto">
           <table className="w-full border-collapse min-w-[500px]">

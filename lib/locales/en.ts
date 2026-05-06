@@ -68,7 +68,6 @@ const t: TranslationSet = {
   plan_filter_overfunded: 'Overfunded',
   plan_filter_available: 'Money Available',
   plan_filter_overspent_count: '🔴 {count} Overspent',
-  plan_category_group: 'Category Group',
   plan_add_category: 'Add Category',
   plan_add_group: 'Add Group',
   plan_new_category_placeholder: 'Category name…',
