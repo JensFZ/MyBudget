@@ -242,13 +242,17 @@ export default function InlineTransactionRow({
         >
           <option value="income:">{t('tx_income_label')}</option>
           <option value="">{t('inline_no_category')}</option>
-          {groups.map(g => (
-            <optgroup key={g.id} label={g.name}>
-              {categories.filter(c => c.group_id === g.id).map(c => (
-                <option key={c.id} value={`c:${c.id}`}>{c.name}</option>
-              ))}
-            </optgroup>
-          ))}
+          {groups.map(g => {
+            const cats = categories.filter(c => c.group_id === g.id);
+            if (cats.length === 0) return null;
+            return (
+              <optgroup key={g.id} label={g.name}>
+                {cats.map(c => (
+                  <option key={c.id} value={`c:${c.id}`}>{c.name}</option>
+                ))}
+              </optgroup>
+            );
+          })}
           <optgroup label={t('inline_transfer_group')}>
             {accounts
               .filter(a => a.id !== Number(accountId) && a.type !== 'closed')
