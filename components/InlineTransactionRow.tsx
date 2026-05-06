@@ -3,7 +3,7 @@
 import { useState, useRef, useEffect, KeyboardEvent, Fragment } from 'react';
 import { Check, X, Trash2 } from 'lucide-react';
 import { useI18n } from '@/lib/i18n';
-import { fmt2, evalAmount } from '@/lib/format';
+import { fmt2, evalAmount, localToday } from '@/lib/format';
 import PayeeInput from '@/components/PayeeInput';
 
 export interface Account {
@@ -59,7 +59,7 @@ interface Props {
   onDelete?: () => void;
 }
 
-const today = new Date().toISOString().slice(0, 10);
+const today = localToday();
 
 
 function parseCategoryValue(val: string): { category_id: number | null; transfer_account_id: number | null } {

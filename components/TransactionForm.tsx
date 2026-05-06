@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { X, Delete } from 'lucide-react';
-import { fmt, evalAmount } from '@/lib/format';
+import { fmt, evalAmount, localToday } from '@/lib/format';
 import { format } from 'date-fns';
 import { de } from 'date-fns/locale';
 
@@ -29,7 +29,7 @@ export default function TransactionForm({ open, onClose, onSaved }: TransactionF
   const [categories, setCategories] = useState<Category[]>([]);
   const [accountId, setAccountId] = useState<number | null>(null);
   const [categoryId, setCategoryId] = useState<number | null>(null);
-  const [date, setDate] = useState(new Date().toISOString().slice(0, 10));
+  const [date, setDate] = useState(localToday);
   const [memo, setMemo] = useState('');
   const [payee, setPayee] = useState('');
   const [cleared, setCleared] = useState(false);

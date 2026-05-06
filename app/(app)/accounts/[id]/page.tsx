@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { use } from 'react';
 import { useRouter } from 'next/navigation';
-import { fmt } from '@/lib/format';
+import { fmt, localToday } from '@/lib/format';
 import { useI18n } from '@/lib/i18n';
 import { Plus, FileUp, RotateCcw, RotateCw, Search, Star, Edit2, X, Check, Archive, ArchiveRestore, Trash2, Wifi, RefreshCw, WifiOff, AlertCircle } from 'lucide-react';
 import TransactionTable from '@/components/TransactionTable';
@@ -252,7 +252,7 @@ export default function AccountPage({ params }: { params: Promise<{ id: string }
 
   async function saveEditAccount() {
     if (!account) return;
-    const today = new Date().toISOString().slice(0, 10);
+    const today = localToday();
 
     await fetch(`/api/accounts/${id}`, {
       method: 'PATCH',

@@ -3,7 +3,7 @@
 import { useState, useRef, useEffect, Fragment } from 'react';
 import { Check, X } from 'lucide-react';
 import { useI18n } from '@/lib/i18n';
-import { fmt2, evalAmount } from '@/lib/format';
+import { fmt2, evalAmount, localToday } from '@/lib/format';
 import PayeeInput from '@/components/PayeeInput';
 import type { Account, Category, CategoryGroup } from './InlineTransactionRow';
 
@@ -27,7 +27,7 @@ interface Props {
   onCancel: () => void;
 }
 
-const today = new Date().toISOString().slice(0, 10);
+const today = localToday();
 
 export default function NewScheduledRow({ showAccount, accounts, categories, groups, defaultAccountId, onCreate, onCancel }: Props) {
   const { t } = useI18n();
