@@ -330,9 +330,14 @@ export default function PlanPage() {
             className="flex items-center gap-3 px-4 py-2 rounded-lg"
             style={{ backgroundColor: readyToAssign < 0 ? '#dc2626' : '#16a34a' }}
           >
-            <span className="text-white font-bold text-lg">{fmt(readyToAssign)}</span>
+            {readyToAssign === 0
+              ? <span className="text-white font-bold text-lg">✓</span>
+              : <span className="text-white font-bold text-lg">{fmt(readyToAssign)}</span>
+            }
             <div>
-              <div className="text-white/80 text-xs">{t('plan_ready_to_assign')}</div>
+              <div className="text-white/80 text-xs">
+                {readyToAssign === 0 ? t('plan_all_assigned') : t('plan_ready_to_assign')}
+              </div>
             </div>
           </div>
         </div>

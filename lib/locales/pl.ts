@@ -62,6 +62,7 @@ const t: TranslationSet = {
 
   plan_heute: 'Dziś',
   plan_ready_to_assign: 'Gotowe do przypisania',
+  plan_all_assigned: 'Wszystko przypisane',
   plan_add_member: 'Dodaj członka',
   plan_add_transaction: 'Dodaj transakcję',
   plan_filter_all: 'Wszystkie',

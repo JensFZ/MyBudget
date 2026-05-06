@@ -62,6 +62,7 @@ const t: TranslationSet = {
 
   plan_heute: 'Today',
   plan_ready_to_assign: 'Ready to Assign',
+  plan_all_assigned: 'All assigned',
   plan_add_member: 'Add Member',
   plan_add_transaction: 'Add Transaction',
   plan_filter_all: 'All',
