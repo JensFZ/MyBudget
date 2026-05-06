@@ -381,7 +381,7 @@ export default function PlanPage() {
           <div className="overflow-x-auto">
           <table className="w-full border-collapse min-w-[500px]">
             <thead>
-              <tr className="bg-gray-50 border-b border-gray-200 text-xs font-semibold text-gray-500 uppercase tracking-wide sticky top-[41px] z-10">
+              <tr className="bg-gray-50 border-b border-gray-200 text-xs font-semibold text-gray-500 uppercase tracking-wide sticky top-0 z-10">
                 <th className="w-8 px-3 py-2" />
                 <th className="px-3 py-2 text-left">{t('plan_col_category')}</th>
                 <th className="px-3 py-2 text-right w-36">{t('plan_col_assigned')}</th>
