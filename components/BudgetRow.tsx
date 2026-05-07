@@ -25,6 +25,7 @@ interface BudgetRowProps {
   onRestore?: () => void;
   onRename?: (newName: string) => void;
   dragRef?: (node: HTMLElement | null) => void;
+  dragActivatorRef?: (node: HTMLElement | null) => void;
   dragStyle?: React.CSSProperties;
   dragHandleListeners?: Record<string, unknown>;
   dragHandleAttributes?: Record<string, unknown>;
@@ -35,7 +36,7 @@ export default function BudgetRow({
   categoryId, name, color, assigned, activity, available,
   isGoal, goalAmount, goalType, month,
   isSelected, onSelect, onAssignChange, onArchive, onDelete, isArchived, onRestore, onRename,
-  dragRef, dragStyle, dragHandleListeners, dragHandleAttributes, isDragging,
+  dragRef, dragActivatorRef, dragStyle, dragHandleListeners, dragHandleAttributes, isDragging,
 }: BudgetRowProps) {
   const { t } = useI18n();
   const [editing, setEditing] = useState(false);
@@ -99,17 +100,19 @@ export default function BudgetRow({
   return (
     <tr
       ref={dragRef}
-      style={{ ...dragStyle, opacity: isDragging ? 0 : undefined }}
+      style={{ ...dragStyle, opacity: isDragging ? 0 : undefined, userSelect: dragRef ? 'none' : undefined }}
       className={`border-b border-gray-100 cursor-pointer group transition-colors ${isArchived ? 'bg-amber-50 opacity-60' : isSelected ? 'bg-blue-50' : 'hover:bg-gray-50'}`}
       onClick={onSelect}
     >
       {/* Selection indicator / drag handle */}
       <td className="w-8 px-3 py-2">
-        {dragHandleListeners ? (
+        {dragRef ? (
           <button
+            ref={dragActivatorRef}
             {...(dragHandleListeners as React.HTMLAttributes<HTMLButtonElement>)}
             {...(dragHandleAttributes as React.HTMLAttributes<HTMLButtonElement>)}
             className="text-gray-300 hover:text-gray-500 cursor-grab active:cursor-grabbing p-0.5 flex items-center justify-center mx-auto"
+            style={{ touchAction: 'none', userSelect: 'none' }}
             onClick={e => e.stopPropagation()}
           >
             <GripVertical size={14} />

@@ -46,11 +46,12 @@ interface BudgetData {
 type FilterType = 'all' | 'overspent' | 'underfunded' | 'overfunded' | 'available';
 
 function SortableBudgetRow(props: React.ComponentProps<typeof BudgetRow>) {
-  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: props.categoryId });
+  const { attributes, listeners, setNodeRef, setActivatorNodeRef, transform, transition, isDragging } = useSortable({ id: props.categoryId });
   return (
     <BudgetRow
       {...props}
       dragRef={setNodeRef}
+      dragActivatorRef={setActivatorNodeRef}
       dragStyle={{ transform: CSS.Transform.toString(transform), transition }}
       dragHandleListeners={listeners as Record<string, unknown>}
       dragHandleAttributes={attributes as unknown as Record<string, unknown>}
