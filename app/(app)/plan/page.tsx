@@ -265,20 +265,11 @@ export default function PlanPage() {
     const activeIdNum = Number(active.id);
     const overIdNum = Number(over.id);
 
-    if (!data) return;
-    const { budgets: allBudgets, allGroups } = data;
+    // flat must exactly match allSortedIds: exclude collapsed groups and apply same filter
+    const flat = sortedGroups.flatMap(([key, g]) =>
+      collapsed[key] ? [] : filterRows(g.rows)
+    );
 
-    const groupsMap: Record<string, { name: string; sort: number; rows: BudgetEntry[]; id: number; isHidden: boolean }> = {};
-    for (const g of allGroups) {
-      groupsMap[String(g.id)] = { name: g.name, sort: g.sort_order, rows: [], id: g.id, isHidden: g.is_hidden === 1 };
-    }
-    for (const b of allBudgets) {
-      const key = String(b.group_id);
-      if (groupsMap[key]) groupsMap[key].rows.push(b);
-    }
-    const currentSortedGroups = Object.entries(groupsMap).sort((a, b) => a[1].sort - b[1].sort);
-
-    const flat = currentSortedGroups.flatMap(([, g]) => filterRows(g.rows));
     const oldIndex = flat.findIndex(r => r.category_id === activeIdNum);
     const newIndex = flat.findIndex(r => r.category_id === overIdNum);
     if (oldIndex === -1 || newIndex === -1) return;
@@ -319,7 +310,9 @@ export default function PlanPage() {
     groups[key].rows.push(b);
   }
   const sortedGroups = Object.entries(groups).sort((a, b) => a[1].sort - b[1].sort);
-  const allSortedIds = sortedGroups.flatMap(([, g]) => filterRows(g.rows).map(r => r.category_id));
+  const allSortedIds = sortedGroups.flatMap(([key, g]) =>
+    collapsed[key] ? [] : filterRows(g.rows).map(r => r.category_id)
+  );
   const overspentCount = budgets.filter(b => b.available < 0).length;
 
   const [y, m] = month.split('-').map(Number);
