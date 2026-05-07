@@ -8,6 +8,9 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Di
 import { Button } from '@/components/ui/button';
 import BudgetRow from '@/components/BudgetRow';
 import PlanRightPanel from '@/components/PlanRightPanel';
+import { DndContext, DragOverlay, PointerSensor, useSensor, useSensors, closestCenter, type DragEndEvent, type DragStartEvent } from '@dnd-kit/core';
+import { SortableContext, useSortable, verticalListSortingStrategy } from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
 
 interface BudgetEntry {
   category_id: number;
@@ -42,6 +45,20 @@ interface BudgetData {
 
 type FilterType = 'all' | 'overspent' | 'underfunded' | 'overfunded' | 'available';
 
+function SortableBudgetRow(props: React.ComponentProps<typeof BudgetRow>) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: props.categoryId });
+  return (
+    <BudgetRow
+      {...props}
+      dragRef={setNodeRef}
+      dragStyle={{ transform: CSS.Transform.toString(transform), transition }}
+      dragHandleListeners={listeners as Record<string, unknown>}
+      dragHandleAttributes={attributes as unknown as Record<string, unknown>}
+      isDragging={isDragging}
+    />
+  );
+}
+
 export default function PlanPage() {
   const { t, tMonthShort, tMonthLong } = useI18n();
   const [data, setData] = useState<BudgetData | null>(null);
@@ -67,6 +84,10 @@ export default function PlanPage() {
   // Modal state
   const [alertMessage, setAlertMessage] = useState<string | null>(null);
   const [confirmDialog, setConfirmDialog] = useState<{ message: string; onConfirm: () => void } | null>(null);
+
+  // Drag-and-drop state
+  const [activeId, setActiveId] = useState<number | null>(null);
+  const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 5 } }));
 
 
   const load = useCallback(async () => {
@@ -235,6 +256,52 @@ export default function PlanPage() {
     });
   }
 
+  async function handleDragEnd(event: DragEndEvent) {
+    const { active, over } = event;
+    setActiveId(null);
+    if (!over || active.id === over.id) return;
+
+    const activeIdNum = Number(active.id);
+    const overIdNum = Number(over.id);
+
+    if (!data) return;
+    const { budgets: allBudgets, allGroups } = data;
+
+    const groupsMap: Record<string, { name: string; sort: number; rows: BudgetEntry[]; id: number; isHidden: boolean }> = {};
+    for (const g of allGroups) {
+      groupsMap[String(g.id)] = { name: g.name, sort: g.sort_order, rows: [], id: g.id, isHidden: g.is_hidden === 1 };
+    }
+    for (const b of allBudgets) {
+      const key = String(b.group_id);
+      if (groupsMap[key]) groupsMap[key].rows.push(b);
+    }
+    const currentSortedGroups = Object.entries(groupsMap).sort((a, b) => a[1].sort - b[1].sort);
+
+    const flat = currentSortedGroups.flatMap(([, g]) => filterRows(g.rows));
+    const oldIndex = flat.findIndex(r => r.category_id === activeIdNum);
+    const newIndex = flat.findIndex(r => r.category_id === overIdNum);
+    if (oldIndex === -1 || newIndex === -1) return;
+
+    const newGroupId = flat[newIndex].group_id;
+    const reordered = [...flat];
+    const [moved] = reordered.splice(oldIndex, 1);
+    reordered.splice(newIndex, 0, { ...moved, group_id: newGroupId });
+
+    const orderCounters: Record<number, number> = {};
+    const items = reordered.map(entry => {
+      const gid = entry.group_id;
+      orderCounters[gid] = (orderCounters[gid] ?? 0) + 1;
+      return { id: entry.category_id, sort_order: orderCounters[gid], group_id: gid };
+    });
+
+    await fetch('/api/categories/reorder', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ items }),
+    });
+    load();
+  }
+
   if (!data) return <div className="p-8 text-center text-gray-400">{t('plan_loading')}</div>;
 
   const { budgets, allGroups, readyToAssign } = data;
@@ -248,6 +315,7 @@ export default function PlanPage() {
     if (groups[key]) groups[key].rows.push(b);
   }
   const sortedGroups = Object.entries(groups).sort((a, b) => a[1].sort - b[1].sort);
+  const allSortedIds = sortedGroups.flatMap(([, g]) => filterRows(g.rows).map(r => r.category_id));
   const overspentCount = budgets.filter(b => b.available < 0).length;
 
   const [y, m] = month.split('-').map(Number);
@@ -384,7 +452,14 @@ export default function PlanPage() {
           </div>
 
           {/* Budget table */}
+          <DndContext
+            sensors={sensors}
+            collisionDetection={closestCenter}
+            onDragStart={(e: DragStartEvent) => setActiveId(Number(e.active.id))}
+            onDragEnd={handleDragEnd}
+          >
           <div className="overflow-x-auto">
+          <SortableContext items={allSortedIds} strategy={verticalListSortingStrategy}>
           <table className="w-full border-collapse min-w-[500px]">
             <thead>
               <tr className="bg-gray-50 border-b border-gray-200 text-xs font-semibold text-gray-500 uppercase tracking-wide sticky top-[41px] z-10">
@@ -504,7 +579,7 @@ export default function PlanPage() {
 
                     {/* Category rows */}
                     {!collapsed[key] && (filter === 'all' ? group.rows : filtered).map(row => (
-                      <BudgetRow
+                      <SortableBudgetRow
                         key={row.category_id}
                         categoryId={row.category_id}
                         name={row.category_name}
@@ -589,7 +664,34 @@ export default function PlanPage() {
               })()}
             </tfoot>
           </table>
+          </SortableContext>
           </div>
+          <DragOverlay>
+            {activeId && (() => {
+              const entry = sortedGroups.flatMap(([, g]) => g.rows).find(r => r.category_id === activeId);
+              if (!entry) return null;
+              return (
+                <table className="w-full shadow-lg bg-white opacity-90 pointer-events-none">
+                  <tbody>
+                    <BudgetRow
+                      categoryId={entry.category_id}
+                      name={entry.category_name}
+                      color={entry.category_color}
+                      assigned={entry.assigned}
+                      activity={entry.activity}
+                      available={entry.available}
+                      isGoal={entry.is_goal === 1}
+                      goalAmount={entry.goal_amount}
+                      goalType={entry.goal_type}
+                      month={month}
+                      onAssignChange={() => {}}
+                    />
+                  </tbody>
+                </table>
+              );
+            })()}
+          </DragOverlay>
+          </DndContext>
 
           {/* Add group link at bottom */}
           {!addingGroup && (

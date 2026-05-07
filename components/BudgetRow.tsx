@@ -2,7 +2,7 @@
 
 import { fmt, evalAmount } from '@/lib/format';
 import { useState, useEffect, useRef } from 'react';
-import { Clock, CheckCircle2, Archive, Trash2, RotateCcw, Pencil } from 'lucide-react';
+import { Clock, CheckCircle2, Archive, Trash2, RotateCcw, Pencil, GripVertical } from 'lucide-react';
 import { useI18n } from '@/lib/i18n';
 
 interface BudgetRowProps {
@@ -24,12 +24,18 @@ interface BudgetRowProps {
   isArchived?: boolean;
   onRestore?: () => void;
   onRename?: (newName: string) => void;
+  dragRef?: (node: HTMLElement | null) => void;
+  dragStyle?: React.CSSProperties;
+  dragHandleListeners?: Record<string, unknown>;
+  dragHandleAttributes?: Record<string, unknown>;
+  isDragging?: boolean;
 }
 
 export default function BudgetRow({
   categoryId, name, color, assigned, activity, available,
   isGoal, goalAmount, goalType, month,
   isSelected, onSelect, onAssignChange, onArchive, onDelete, isArchived, onRestore, onRename,
+  dragRef, dragStyle, dragHandleListeners, dragHandleAttributes, isDragging,
 }: BudgetRowProps) {
   const { t } = useI18n();
   const [editing, setEditing] = useState(false);
@@ -92,12 +98,25 @@ export default function BudgetRow({
 
   return (
     <tr
+      ref={dragRef}
+      style={{ ...dragStyle, opacity: isDragging ? 0 : undefined }}
       className={`border-b border-gray-100 cursor-pointer group transition-colors ${isArchived ? 'bg-amber-50 opacity-60' : isSelected ? 'bg-blue-50' : 'hover:bg-gray-50'}`}
       onClick={onSelect}
     >
-      {/* Selection indicator */}
+      {/* Selection indicator / drag handle */}
       <td className="w-8 px-3 py-2">
-        <div className={`w-1.5 h-6 rounded-full mx-auto transition-colors ${isSelected ? 'bg-blue-500' : 'bg-transparent group-hover:bg-gray-200'}`} />
+        {dragHandleListeners ? (
+          <button
+            {...(dragHandleListeners as React.HTMLAttributes<HTMLButtonElement>)}
+            {...(dragHandleAttributes as React.HTMLAttributes<HTMLButtonElement>)}
+            className="text-gray-300 hover:text-gray-500 cursor-grab active:cursor-grabbing p-0.5 flex items-center justify-center mx-auto"
+            onClick={e => e.stopPropagation()}
+          >
+            <GripVertical size={14} />
+          </button>
+        ) : (
+          <div className={`w-1.5 h-6 rounded-full mx-auto transition-colors ${isSelected ? 'bg-blue-500' : 'bg-transparent group-hover:bg-gray-200'}`} />
+        )}
       </td>
       <td className="px-3 py-2">
         <div className="flex items-center gap-2">
