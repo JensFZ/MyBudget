@@ -5,7 +5,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { useI18n } from '@/lib/i18n';
 import {
   Banknote, CreditCard, Wallet, PiggyBank, Building2, TrendingUp,
-  Home, Car, DollarSign, ChevronLeft, Check, Wifi, AlertCircle, ChevronRight
+  Home, Car, DollarSign, ChevronLeft, Check, Wifi, AlertCircle, ChevronRight,
+  ArrowDownLeft, ArrowUpRight
 } from 'lucide-react';
 import { lookupFintsUrl } from '@/lib/blz-lookup';
 
@@ -23,6 +24,7 @@ type AccountSubtype = {
   dbType: 'checking' | 'savings' | 'cash' | 'credit' | 'tracking' | 'closed';
   on_budget: 1 | 0;
   canLinkBank: boolean;
+  subtype?: string;
 };
 
 interface SEPAAccount {
@@ -47,7 +49,8 @@ const TRACKING_ACCOUNTS: AccountSubtype[] = [
   { id: 'asset', labelKey: 'acct_asset', descKey: 'acct_asset_desc', icon: <TrendingUp size={22} />, dbType: 'tracking', on_budget: 0, canLinkBank: false },
   { id: 'real_estate', labelKey: 'acct_real_estate', descKey: 'acct_real_estate_desc', icon: <Home size={22} />, dbType: 'tracking', on_budget: 0, canLinkBank: false },
   { id: 'vehicle', labelKey: 'acct_vehicle', descKey: 'acct_vehicle_desc', icon: <Car size={22} />, dbType: 'tracking', on_budget: 0, canLinkBank: false },
-  { id: 'loan', labelKey: 'acct_loan', descKey: 'acct_loan_desc', icon: <Building2 size={22} />, dbType: 'tracking', on_budget: 0, canLinkBank: false },
+  { id: 'loan_received', labelKey: 'acct_loan_received', descKey: 'acct_loan_received_desc', icon: <ArrowDownLeft size={22} />, dbType: 'tracking', on_budget: 0, canLinkBank: false, subtype: 'loan_received' },
+  { id: 'loan_granted', labelKey: 'acct_loan_granted', descKey: 'acct_loan_granted_desc', icon: <ArrowUpRight size={22} />, dbType: 'tracking', on_budget: 0, canLinkBank: false, subtype: 'loan_granted' },
 ];
 
 const inputCls = 'w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100';
@@ -105,7 +108,7 @@ export default function AddAccountDialog({ open, onClose, onSaved }: Props) {
       const res = await fetch('/api/accounts', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name: name.trim(), type: selected.dbType, balance: numBalance, on_budget: selected.on_budget }),
+        body: JSON.stringify({ name: name.trim(), type: selected.dbType, balance: numBalance, on_budget: selected.on_budget, subtype: selected.subtype ?? null }),
       });
       const created = await res.json();
       onSaved();

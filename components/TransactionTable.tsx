@@ -5,6 +5,8 @@ import { useState } from 'react';
 import { Check, Circle, Trash2 } from 'lucide-react';
 import { useI18n } from '@/lib/i18n';
 import InlineTransactionRow, { Account, Category, CategoryGroup, SaveData } from '@/components/InlineTransactionRow';
+import InlineScheduledRow, { ScheduledTransaction, ScheduledUpdateData } from '@/components/InlineScheduledRow';
+import NewScheduledRow, { NewScheduledData } from '@/components/NewScheduledRow';
 
 interface Transaction {
   id: number;
@@ -24,6 +26,7 @@ interface Transaction {
 
 interface Props {
   transactions: Transaction[];
+  scheduledTransactions: ScheduledTransaction[];
   showAccount: boolean;
   accounts: Account[];
   categories: Category[];
@@ -32,10 +35,16 @@ interface Props {
   addingNew: boolean;
   onNewSaved: (data: SaveData) => Promise<void>;
   onNewCancelled: () => void;
+  addingScheduled: boolean;
+  onNewScheduledSaved: (data: NewScheduledData) => Promise<void>;
+  onNewScheduledCancelled: () => void;
   onSave: (id: number, data: SaveData) => Promise<void>;
   onDelete: (id: number) => void;
   onBulkDelete: (ids: number[]) => void;
   onToggleCleared: (id: number, cleared: number) => void;
+  onBookScheduled: (id: number, date: string) => Promise<void>;
+  onSaveScheduled: (id: number, data: ScheduledUpdateData) => Promise<void>;
+  onDeleteScheduled: (id: number) => void;
 }
 
 function formatDate(dateStr: string) {
@@ -47,6 +56,7 @@ const ACTION_COL = 1;
 
 export default function TransactionTable({
   transactions,
+  scheduledTransactions,
   showAccount,
   accounts,
   categories,
@@ -55,17 +65,25 @@ export default function TransactionTable({
   addingNew,
   onNewSaved,
   onNewCancelled,
+  addingScheduled,
+  onNewScheduledSaved,
+  onNewScheduledCancelled,
   onSave,
   onDelete,
   onBulkDelete,
   onToggleCleared,
+  onBookScheduled,
+  onSaveScheduled,
+  onDeleteScheduled,
 }: Props) {
   const { t } = useI18n();
   const [editingId, setEditingId] = useState<number | null>(null);
+  const [editingScheduledId, setEditingScheduledId] = useState<number | null>(null);
   const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
 
   function handleRowClick(id: number) {
     if (editingId === id) return;
+    setEditingScheduledId(null);
     setEditingId(id);
   }
 
@@ -141,6 +159,37 @@ export default function TransactionTable({
         </tr>
       </thead>
       <tbody>
+        {/* New scheduled transaction form */}
+        {addingScheduled && (
+          <NewScheduledRow
+            showAccount={showAccount}
+            accounts={accounts}
+            categories={categories}
+            groups={groups}
+            defaultAccountId={defaultAccountId}
+            onCreate={async data => { await onNewScheduledSaved(data); }}
+            onCancel={onNewScheduledCancelled}
+          />
+        )}
+
+        {/* Upcoming scheduled transactions */}
+        {scheduledTransactions.map(st => (
+          <InlineScheduledRow
+            key={`sched-${st.id}`}
+            scheduled={st}
+            showAccount={showAccount}
+            accounts={accounts}
+            categories={categories}
+            groups={groups}
+            isEditing={editingScheduledId === st.id}
+            onEdit={() => { setEditingId(null); setEditingScheduledId(st.id); }}
+            onCancelEdit={() => setEditingScheduledId(null)}
+            onBook={async (id, date) => { setEditingScheduledId(null); await onBookScheduled(id, date); }}
+            onSave={onSaveScheduled}
+            onDelete={id => { setEditingScheduledId(null); onDeleteScheduled(id); }}
+          />
+        ))}
+
         {/* New row at top */}
         {addingNew && (
           <InlineTransactionRow
@@ -231,6 +280,8 @@ export default function TransactionTable({
                   <span className="inline-block bg-orange-100 text-orange-700 text-xs px-2 py-0.5 rounded">
                     {t('tx_needs_category')}
                   </span>
+                ) : !tx.category_id && tx.amount > 0 ? (
+                  <span className="text-xs text-green-600 bg-green-50 px-2 py-0.5 rounded">{t('tx_income_label')}</span>
                 ) : tx.category_name ? (
                   <span className="flex items-center gap-1.5">
                     {(() => {

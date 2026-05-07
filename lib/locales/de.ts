@@ -21,6 +21,8 @@ const t: TranslationSet = {
   sidebar_account_group_cash: 'Bargeld',
   sidebar_account_group_credit: 'Kreditkarten',
   sidebar_account_group_tracking: 'Verfolgung',
+  sidebar_account_group_loans_received: 'Aufgenommene Kredite',
+  sidebar_account_group_loans_granted: 'Gewährte Kredite',
   sidebar_account_group_closed: 'Geschlossen',
 
   // Settings
@@ -60,6 +62,7 @@ const t: TranslationSet = {
 
   plan_heute: 'Heute',
   plan_ready_to_assign: 'Bereit zum Zuweisen',
+  plan_all_assigned: 'Alles zugewiesen',
   plan_add_member: 'Mitglied hinzufügen',
   plan_add_transaction: 'Transaktion hinzufügen',
   plan_filter_all: 'Alle',
@@ -68,7 +71,6 @@ const t: TranslationSet = {
   plan_filter_overfunded: 'Überfinanziert',
   plan_filter_available: 'Verfügbar',
   plan_filter_overspent_count: '🔴 {count} Überzogen',
-  plan_category_group: 'Kategoriegruppe',
   plan_add_category: 'Kategorie hinzufügen',
   plan_add_group: 'Gruppe hinzufügen',
   plan_new_category_placeholder: 'Kategoriename…',
@@ -140,8 +142,12 @@ const t: TranslationSet = {
   tx_selected_count: '{count} ausgewählt',
   tx_delete_selected: 'Löschen',
   tx_deselect_all: 'Auswahl aufheben',
+  tx_book_now: 'Einbuchen',
+  tx_scheduled_save_template: 'Vorlage speichern',
+  tx_scheduled_edit_hint: 'Klicken zum Bearbeiten der Vorlage',
 
   // InlineTransactionRow
+  tx_income_label: 'Einnahme',
   inline_no_category: '— Keine Kategorie —',
   inline_transfer_group: '── Transfer auf Konto ──',
   inline_transfer_to: 'Transfer: {name}',
@@ -175,6 +181,9 @@ const t: TranslationSet = {
   accounts_needs_category: '🔔 {count} Transaktionen benötigen eine Kategorie.',
   accounts_needs_category_view: 'Anzeigen',
   accounts_add_transaction: 'Transaktion hinzufügen',
+  accounts_add_scheduled: 'Wiederkehrend planen',
+  sched_create: 'Erstellen',
+  sched_first_occurrence_hint: 'Datum der ersten Fälligkeit',
   accounts_link_account: 'Konto verknüpfen',
   accounts_file_import: 'Datei importieren',
   accounts_search: 'Suchen',
@@ -243,8 +252,10 @@ const t: TranslationSet = {
   acct_real_estate_desc: 'Grundstücks- oder Immobilienwert',
   acct_vehicle: 'Fahrzeug',
   acct_vehicle_desc: 'Auto oder Fahrzeugwert',
-  acct_loan: 'Kredit',
-  acct_loan_desc: 'Hypothek, Privatkredit oder Schulden',
+  acct_loan_received: 'Aufgenommener Kredit',
+  acct_loan_received_desc: 'Kredit, Hypothek oder Schulden die du aufgenommen hast',
+  acct_loan_granted: 'Gewährter Kredit',
+  acct_loan_granted_desc: 'Geld das du an jemand anderen verliehen hast',
 
   // Filter bar
   filter_all: 'Alle',
@@ -309,6 +320,11 @@ const t: TranslationSet = {
   reflect_net_worth: 'Nettovermögen',
   reflect_assets: 'Vermögen',
   reflect_debts: 'Schulden',
+  reflect_total_worth: 'Gesamtvermögen',
+  reflect_loans_section: 'Kredite (nicht im Nettovermögen)',
+  reflect_loans_received: 'Aufgen. Kredite',
+  reflect_loans_granted: 'Gewährte Kredite',
+  reflect_loans_hint: 'Gestrichelte Kacheln fließen nicht ins Nettovermögen ein',
   reflect_age_of_money: 'Alter des Geldes',
   reflect_age_days: 'Tage',
   reflect_age_desc: 'Durchschnittliche Tage zwischen Verdienen und Ausgeben. Mehr = größerer finanzieller Puffer.',

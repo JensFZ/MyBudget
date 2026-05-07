@@ -3,7 +3,8 @@
 import { useState, useRef, useEffect, KeyboardEvent, Fragment } from 'react';
 import { Check, X, Trash2 } from 'lucide-react';
 import { useI18n } from '@/lib/i18n';
-import { fmt2, evalAmount } from '@/lib/format';
+import { fmt2, evalAmount, localToday } from '@/lib/format';
+import PayeeInput from '@/components/PayeeInput';
 
 export interface Account {
   id: number;
@@ -58,18 +59,21 @@ interface Props {
   onDelete?: () => void;
 }
 
-const today = new Date().toISOString().slice(0, 10);
+const today = localToday();
 
 
 function parseCategoryValue(val: string): { category_id: number | null; transfer_account_id: number | null } {
   if (val.startsWith('t:')) return { category_id: null, transfer_account_id: Number(val.slice(2)) };
   if (val.startsWith('c:')) return { category_id: Number(val.slice(2)), transfer_account_id: null };
+  // 'income:' sentinel → no category, not a transfer
   return { category_id: null, transfer_account_id: null };
 }
 
-function toCategoryValue(category_id: number | null, transfer_account_id: number | null): string {
+function toCategoryValue(category_id: number | null, transfer_account_id: number | null, amount?: number): string {
   if (transfer_account_id) return `t:${transfer_account_id}`;
   if (category_id) return `c:${category_id}`;
+  // Default to income sentinel for inflows (amount > 0 or unknown)
+  if (!amount || amount > 0) return 'income:';
   return '';
 }
 
@@ -88,7 +92,7 @@ export default function InlineTransactionRow({
   const { t } = useI18n();
 
   const initAccountId = initial?.account_id ?? defaultAccountId ?? accounts[0]?.id ?? 0;
-  const initCatVal = toCategoryValue(initial?.category_id ?? null, initial?.transfer_account_id ?? null);
+  const initCatVal = toCategoryValue(initial?.category_id ?? null, initial?.transfer_account_id ?? null, initial?.amount);
   const initAmount = initial?.amount ?? 0;
 
   const [accountId, setAccountId] = useState(String(initAccountId));
@@ -216,11 +220,15 @@ export default function InlineTransactionRow({
 
       {/* Payee */}
       <td className="px-2 py-1.5 min-w-[150px]">
-        <input
+        <PayeeInput
           className={inputCls}
           placeholder={t('inline_payee_placeholder')}
           value={payee}
-          onChange={e => setPayee(e.target.value)}
+          onChange={setPayee}
+          onSelectPayee={(p, catId) => {
+            setPayee(p);
+            if (catId) setCatValue(`c:${catId}`);
+          }}
           onKeyDown={handleKey}
         />
       </td>
@@ -232,14 +240,19 @@ export default function InlineTransactionRow({
           value={catValue}
           onChange={e => setCatValue(e.target.value)}
         >
+          <option value="income:">{t('tx_income_label')}</option>
           <option value="">{t('inline_no_category')}</option>
-          {groups.map(g => (
-            <optgroup key={g.id} label={g.name}>
-              {categories.filter(c => c.group_id === g.id).map(c => (
-                <option key={c.id} value={`c:${c.id}`}>{c.name}</option>
-              ))}
-            </optgroup>
-          ))}
+          {groups.map(g => {
+            const cats = categories.filter(c => c.group_id === g.id);
+            if (cats.length === 0) return null;
+            return (
+              <optgroup key={g.id} label={g.name}>
+                {cats.map(c => (
+                  <option key={c.id} value={`c:${c.id}`}>{c.name}</option>
+                ))}
+              </optgroup>
+            );
+          })}
           <optgroup label={t('inline_transfer_group')}>
             {accounts
               .filter(a => a.id !== Number(accountId) && a.type !== 'closed')

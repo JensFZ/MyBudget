@@ -79,7 +79,7 @@ export async function GET(req: NextRequest) {
   ).all(ctx.vaultId, includeHidden ? 1 : 0) as { id: number; name: string; sort_order: number; is_hidden: number }[];
 
   const accounts = db.prepare(
-    "SELECT balance FROM accounts WHERE vault_id = ? AND on_budget = 1 AND type != 'credit'"
+    "SELECT balance FROM accounts WHERE vault_id = ? AND on_budget = 1 AND COALESCE(subtype,'') NOT IN ('loan_received','loan_granted')"
   ).all(ctx.vaultId) as { balance: number }[];
   const totalBalance = accounts.reduce((s, a) => s + a.balance, 0);
 

@@ -13,6 +13,9 @@ interface StatsData {
   netWorth: number;
   assets: number;
   debts: number;
+  loansReceived: number;
+  loansGranted: number;
+  ageOfMoney: number | null;
 }
 
 function defaultRange(): { from: string; to: string } {
@@ -56,19 +59,60 @@ export default function ReflectPage() {
         <div className="max-w-4xl mx-auto w-full px-6 py-6 space-y-6">
           {/* Net Worth card */}
           <div className="bg-white rounded-xl border border-gray-200 p-6">
-            <p className="text-xs text-gray-500 uppercase tracking-wide mb-1">{t('reflect_net_worth')}</p>
-            <p className="text-4xl font-bold text-gray-900">{fmt(stats.netWorth)}</p>
-            <div className="flex gap-8 mt-3">
-              <div>
+            {/* Total (everything) */}
+            <p className="text-xs text-gray-500 uppercase tracking-wide mb-1">{t('reflect_total_worth')}</p>
+            <p className="text-4xl font-bold text-gray-900">{fmt(stats.netWorth + stats.loansReceived + stats.loansGranted)}</p>
+
+            {/* Net worth without loans */}
+            {(stats.loansReceived !== 0 || stats.loansGranted !== 0) && (
+              <p className="text-sm text-gray-400 mt-1">
+                {t('reflect_net_worth')}: <span className="font-medium text-gray-600">{fmt(stats.netWorth)}</span>
+              </p>
+            )}
+
+            {/* Four tiles */}
+            <div className="mt-4 grid grid-cols-2 sm:grid-cols-4 gap-3">
+              <div className="bg-green-50 rounded-lg px-3 py-2.5">
                 <p className="text-xs text-gray-400 mb-0.5">{t('reflect_assets')}</p>
-                <p className="text-lg font-semibold text-green-600">{fmt(stats.assets)}</p>
+                <p className="text-base font-semibold text-green-600">{fmt(stats.assets)}</p>
               </div>
-              <div>
+              <div className="bg-red-50 rounded-lg px-3 py-2.5">
                 <p className="text-xs text-gray-400 mb-0.5">{t('reflect_debts')}</p>
-                <p className="text-lg font-semibold text-red-500">{fmt(stats.debts)}</p>
+                <p className="text-base font-semibold text-red-500">{fmt(stats.debts)}</p>
               </div>
+              {(stats.loansReceived !== 0 || stats.loansGranted !== 0) && (<>
+                <div className="bg-gray-50 rounded-lg px-3 py-2.5 border border-dashed border-gray-200">
+                  <p className="text-xs text-gray-400 mb-0.5">{t('reflect_loans_received')}</p>
+                  <p className="text-base font-semibold text-orange-500">{fmt(stats.loansReceived)}</p>
+                </div>
+                <div className="bg-gray-50 rounded-lg px-3 py-2.5 border border-dashed border-gray-200">
+                  <p className="text-xs text-gray-400 mb-0.5">{t('reflect_loans_granted')}</p>
+                  <p className="text-base font-semibold text-blue-500">{fmt(stats.loansGranted)}</p>
+                </div>
+              </>)}
             </div>
+            {(stats.loansReceived !== 0 || stats.loansGranted !== 0) && (
+              <p className="text-xs text-gray-400 mt-2">{t('reflect_loans_hint')}</p>
+            )}
           </div>
+
+          {/* Age of Money */}
+          {stats.ageOfMoney !== null && (
+            <div className="bg-white rounded-xl border border-gray-200 p-6">
+              <p className="text-xs text-gray-500 uppercase tracking-wide mb-1">{t('reflect_age_of_money')}</p>
+              <div className="flex items-end gap-2">
+                <span className={`text-4xl font-bold ${
+                  stats.ageOfMoney >= 30 ? 'text-green-600'
+                  : stats.ageOfMoney >= 15 ? 'text-yellow-500'
+                  : 'text-orange-500'
+                }`}>
+                  {stats.ageOfMoney}
+                </span>
+                <span className="text-gray-400 text-lg mb-0.5">{t('reflect_age_days')}</span>
+              </div>
+              <p className="text-xs text-gray-400 mt-2">{t('reflect_age_desc')}</p>
+            </div>
+          )}
 
           {/* Charts */}
           <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">

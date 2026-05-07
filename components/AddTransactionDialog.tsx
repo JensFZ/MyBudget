@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { localToday } from '@/lib/format';
 
 interface Account {
   id: number;
@@ -39,7 +40,7 @@ export default function AddTransactionDialog({ open, onClose, onSaved, defaultAc
   const [groups, setGroups] = useState<CategoryGroup[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
 
-  const today = new Date().toISOString().slice(0, 10);
+  const today = localToday();
   const [accountId, setAccountId] = useState<string>('');
   const [date, setDate] = useState(today);
   const [payee, setPayee] = useState('');

@@ -6,12 +6,12 @@ export async function GET(req: NextRequest) {
   const ctx = await resolveVault(req);
   if (!ctx) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   const groups = db.prepare(
-    'SELECT * FROM category_groups WHERE vault_id = ? ORDER BY sort_order'
+    'SELECT * FROM category_groups WHERE vault_id = ? AND is_hidden = 0 ORDER BY sort_order'
   ).all(ctx.vaultId) as { id: number; name: string; sort_order: number; is_hidden: number }[];
   const groupIds = groups.map(g => g.id);
   const categories = groupIds.length > 0
     ? db.prepare(
-        `SELECT * FROM categories WHERE group_id IN (${groupIds.map(() => '?').join(',')}) ORDER BY sort_order`
+        `SELECT * FROM categories WHERE group_id IN (${groupIds.map(() => '?').join(',')}) AND is_hidden = 0 ORDER BY sort_order`
       ).all(...groupIds)
     : [];
   return NextResponse.json({ groups, categories });

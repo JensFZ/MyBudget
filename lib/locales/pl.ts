@@ -21,6 +21,8 @@ const t: TranslationSet = {
   sidebar_account_group_cash: 'Gotówka',
   sidebar_account_group_credit: 'Karty kredytowe',
   sidebar_account_group_tracking: 'Śledzenie',
+  sidebar_account_group_loans_received: 'Zaciągnięte kredyty',
+  sidebar_account_group_loans_granted: 'Udzielone kredyty',
   sidebar_account_group_closed: 'Zamknięte',
 
   // Settings
@@ -60,6 +62,7 @@ const t: TranslationSet = {
 
   plan_heute: 'Dziś',
   plan_ready_to_assign: 'Gotowe do przypisania',
+  plan_all_assigned: 'Wszystko przypisane',
   plan_add_member: 'Dodaj członka',
   plan_add_transaction: 'Dodaj transakcję',
   plan_filter_all: 'Wszystkie',
@@ -68,7 +71,6 @@ const t: TranslationSet = {
   plan_filter_overfunded: 'Nadmiarowe',
   plan_filter_available: 'Dostępne środki',
   plan_filter_overspent_count: '🔴 {count} przekroczone',
-  plan_category_group: 'Grupa kategorii',
   plan_add_category: 'Dodaj kategorię',
   plan_add_group: 'Dodaj grupę',
   plan_new_category_placeholder: 'Nazwa kategorii…',
@@ -140,8 +142,12 @@ const t: TranslationSet = {
   tx_selected_count: '{count} zaznaczono',
   tx_delete_selected: 'Usuń',
   tx_deselect_all: 'Odznacz wszystko',
+  tx_book_now: 'Zaksięguj',
+  tx_scheduled_save_template: 'Zapisz szablon',
+  tx_scheduled_edit_hint: 'Kliknij aby edytować szablon',
 
   // InlineTransactionRow
+  tx_income_label: 'Przychód',
   inline_no_category: '— Brak kategorii —',
   inline_transfer_group: '── Przelew na konto ──',
   inline_transfer_to: 'Przelew: {name}',
@@ -175,6 +181,9 @@ const t: TranslationSet = {
   accounts_needs_category: '🔔 {count} transakcji wymaga kategorii.',
   accounts_needs_category_view: 'Pokaż',
   accounts_add_transaction: 'Dodaj transakcję',
+  accounts_add_scheduled: 'Zaplanuj cykliczne',
+  sched_create: 'Utwórz',
+  sched_first_occurrence_hint: 'Data pierwszego wystąpienia',
   accounts_link_account: 'Połącz konto',
   accounts_file_import: 'Import pliku',
   accounts_search: 'Szukaj',
@@ -243,8 +252,10 @@ const t: TranslationSet = {
   acct_real_estate_desc: 'Śledzenie wartości nieruchomości',
   acct_vehicle: 'Pojazd',
   acct_vehicle_desc: 'Samochód lub pojazd',
-  acct_loan: 'Pożyczka',
-  acct_loan_desc: 'Hipoteka, pożyczka osobista lub dług',
+  acct_loan_received: 'Zaciągnięty kredyt',
+  acct_loan_received_desc: 'Hipoteka, pożyczka osobista lub dług który masz',
+  acct_loan_granted: 'Udzielony kredyt',
+  acct_loan_granted_desc: 'Pieniądze które pożyczyłeś komuś innemu',
 
   // Filter bar
   filter_all: 'Wszystkie',
@@ -309,6 +320,11 @@ const t: TranslationSet = {
   reflect_net_worth: 'Majątek netto',
   reflect_assets: 'Aktywa',
   reflect_debts: 'Zobowiązania',
+  reflect_total_worth: 'Majątek całkowity',
+  reflect_loans_section: 'Kredyty (poza majątkiem netto)',
+  reflect_loans_received: 'Zaciągnięte kredyty',
+  reflect_loans_granted: 'Udzielone kredyty',
+  reflect_loans_hint: 'Kafelki z przerywaną ramką nie wliczają się do majątku netto',
   reflect_age_of_money: 'Wiek pieniądza',
   reflect_age_days: 'dni',
   reflect_age_desc: 'Średnia liczba dni między zarobkiem a wydaniem. Więcej = większa poduszka finansowa.',

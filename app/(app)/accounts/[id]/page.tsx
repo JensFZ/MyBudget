@@ -3,13 +3,15 @@
 import { useState, useEffect, useCallback } from 'react';
 import { use } from 'react';
 import { useRouter } from 'next/navigation';
-import { fmt } from '@/lib/format';
+import { fmt, localToday } from '@/lib/format';
 import { useI18n } from '@/lib/i18n';
 import { Plus, FileUp, RotateCcw, RotateCw, Search, Star, Edit2, X, Check, Archive, ArchiveRestore, Trash2, Wifi, RefreshCw, WifiOff, AlertCircle } from 'lucide-react';
 import TransactionTable from '@/components/TransactionTable';
 import ImportDialog from '@/components/ImportDialog';
 import BankConnectionDialog from '@/components/BankConnectionDialog';
 import type { Account, Category, CategoryGroup, SaveData } from '@/components/InlineTransactionRow';
+import type { ScheduledTransaction, ScheduledUpdateData } from '@/components/InlineScheduledRow';
+import type { NewScheduledData } from '@/components/NewScheduledRow';
 
 type Filter = 'all' | 'uncleared' | 'needs_category';
 
@@ -50,7 +52,9 @@ export default function AccountPage({ params }: { params: Promise<{ id: string }
   const [accounts, setAccounts] = useState<Account[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [groups, setGroups] = useState<CategoryGroup[]>([]);
+  const [scheduledTransactions, setScheduledTransactions] = useState<ScheduledTransaction[]>([]);
   const [addingNew, setAddingNew] = useState(false);
+  const [addingScheduled, setAddingScheduled] = useState(false);
   const [showImport, setShowImport] = useState(false);
   const [search, setSearch] = useState('');
   const [showSearch, setShowSearch] = useState(false);
@@ -105,7 +109,29 @@ export default function AccountPage({ params }: { params: Promise<{ id: string }
     setTransactions(await res.json());
   }, [id]);
 
+  const loadScheduledTransactions = useCallback(async () => {
+    const res = await fetch('/api/scheduled-transactions');
+    if (res.ok) {
+      const all: ScheduledTransaction[] = await res.json();
+      setScheduledTransactions(all.filter(st => st.account_id === Number(id)));
+    }
+  }, [id]);
+
   useEffect(() => {
+    // Auto-book any scheduled transactions that are due
+    fetch('/api/scheduled-transactions/book-due', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ today: localToday() }),
+    }).then(r => r.json()).then(({ booked }) => {
+      if (booked > 0) {
+        loadAccount();
+        loadTransactions();
+        notifySidebar();
+      }
+      loadScheduledTransactions();
+    }).catch(() => loadScheduledTransactions());
+
     loadAccount();
     loadTransactions();
     loadBankConn();
@@ -114,10 +140,58 @@ export default function AccountPage({ params }: { params: Promise<{ id: string }
       setGroups(d.groups);
       setCategories(d.categories);
     }).catch(() => {});
-  }, [loadAccount, loadTransactions, loadBankConn]);
+  }, [loadAccount, loadTransactions, loadScheduledTransactions, loadBankConn]);
 
   function notifySidebar() {
     window.dispatchEvent(new CustomEvent('accounts-updated'));
+  }
+
+  async function handleBookScheduled(stId: number, date: string) {
+    await fetch(`/api/scheduled-transactions/${stId}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ date }),
+    });
+    loadAccount();
+    loadTransactions();
+    loadScheduledTransactions();
+    notifySidebar();
+  }
+
+  async function handleSaveScheduled(stId: number, data: ScheduledUpdateData) {
+    await fetch(`/api/scheduled-transactions/${stId}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
+    });
+    loadScheduledTransactions();
+  }
+
+  async function handleDeleteScheduled(stId: number) {
+    await fetch('/api/scheduled-transactions', {
+      method: 'DELETE',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id: stId }),
+    });
+    loadScheduledTransactions();
+  }
+
+  async function handleNewScheduledSaved(data: NewScheduledData) {
+    await fetch('/api/scheduled-transactions', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        account_id: data.account_id,
+        category_id: data.category_id,
+        payee: data.payee,
+        memo: data.memo,
+        amount: data.amount,
+        frequency: data.frequency,
+        next_date: data.next_date,
+      }),
+    });
+    setAddingScheduled(false);
+    loadScheduledTransactions();
   }
 
   async function handleNewSaved(data: SaveData) {
@@ -129,6 +203,7 @@ export default function AccountPage({ params }: { params: Promise<{ id: string }
     setAddingNew(false);
     loadAccount();
     loadTransactions();
+    loadScheduledTransactions();
     notifySidebar();
   }
 
@@ -190,7 +265,7 @@ export default function AccountPage({ params }: { params: Promise<{ id: string }
 
   async function saveEditAccount() {
     if (!account) return;
-    const today = new Date().toISOString().slice(0, 10);
+    const today = localToday();
 
     await fetch(`/api/accounts/${id}`, {
       method: 'PATCH',
@@ -390,10 +465,16 @@ export default function AccountPage({ params }: { params: Promise<{ id: string }
       {/* Toolbar */}
       <div className="flex flex-wrap items-center gap-2 px-4 md:px-6 py-2 bg-white border-b shrink-0">
         <button
-          onClick={() => setAddingNew(true)}
+          onClick={() => { setAddingNew(true); setAddingScheduled(false); }}
           className="flex items-center gap-1 bg-blue-600 text-white text-sm rounded-lg px-3 py-1.5 hover:bg-blue-700"
         >
           <Plus size={14} /> {t('accounts_add_transaction')}
+        </button>
+        <button
+          onClick={() => { setAddingScheduled(true); setAddingNew(false); }}
+          className="flex items-center gap-1 text-sm text-green-700 border border-green-300 rounded-lg px-3 py-1.5 hover:bg-green-50"
+        >
+          <RotateCw size={14} /> {t('accounts_add_scheduled')}
         </button>
         {isCredit && (
           <button className="flex items-center gap-1 text-sm text-gray-600 border border-gray-200 rounded-lg px-3 py-1.5 hover:bg-gray-50">
@@ -509,6 +590,7 @@ export default function AccountPage({ params }: { params: Promise<{ id: string }
       <div className="flex-1 overflow-y-auto bg-white">
         <TransactionTable
           transactions={filtered}
+          scheduledTransactions={scheduledTransactions}
           showAccount={false}
           accounts={accounts}
           categories={categories}
@@ -517,10 +599,16 @@ export default function AccountPage({ params }: { params: Promise<{ id: string }
           addingNew={addingNew}
           onNewSaved={handleNewSaved}
           onNewCancelled={() => setAddingNew(false)}
+          addingScheduled={addingScheduled}
+          onNewScheduledSaved={handleNewScheduledSaved}
+          onNewScheduledCancelled={() => setAddingScheduled(false)}
           onSave={handleSave}
           onDelete={handleDelete}
           onBulkDelete={handleBulkDelete}
           onToggleCleared={handleToggleCleared}
+          onBookScheduled={handleBookScheduled}
+          onSaveScheduled={handleSaveScheduled}
+          onDeleteScheduled={handleDeleteScheduled}
         />
       </div>
 

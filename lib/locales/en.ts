@@ -21,6 +21,8 @@ const t: TranslationSet = {
   sidebar_account_group_cash: 'Cash',
   sidebar_account_group_credit: 'Credit',
   sidebar_account_group_tracking: 'Tracking',
+  sidebar_account_group_loans_received: 'Received Loans',
+  sidebar_account_group_loans_granted: 'Granted Loans',
   sidebar_account_group_closed: 'Closed',
 
   // Settings
@@ -60,6 +62,7 @@ const t: TranslationSet = {
 
   plan_heute: 'Today',
   plan_ready_to_assign: 'Ready to Assign',
+  plan_all_assigned: 'All assigned',
   plan_add_member: 'Add Member',
   plan_add_transaction: 'Add Transaction',
   plan_filter_all: 'All',
@@ -68,7 +71,6 @@ const t: TranslationSet = {
   plan_filter_overfunded: 'Overfunded',
   plan_filter_available: 'Money Available',
   plan_filter_overspent_count: '🔴 {count} Overspent',
-  plan_category_group: 'Category Group',
   plan_add_category: 'Add Category',
   plan_add_group: 'Add Group',
   plan_new_category_placeholder: 'Category name…',
@@ -140,8 +142,12 @@ const t: TranslationSet = {
   tx_selected_count: '{count} selected',
   tx_delete_selected: 'Delete',
   tx_deselect_all: 'Deselect all',
+  tx_book_now: 'Book now',
+  tx_scheduled_save_template: 'Save template',
+  tx_scheduled_edit_hint: 'Click to edit template',
 
   // InlineTransactionRow
+  tx_income_label: 'Income',
   inline_no_category: '— No category —',
   inline_transfer_group: '── Transfer to Account ──',
   inline_transfer_to: 'Transfer: {name}',
@@ -175,6 +181,9 @@ const t: TranslationSet = {
   accounts_needs_category: '🔔 {count} transactions need a category.',
   accounts_needs_category_view: 'View',
   accounts_add_transaction: 'Add Transaction',
+  accounts_add_scheduled: 'Plan recurring',
+  sched_create: 'Create',
+  sched_first_occurrence_hint: 'Date of first occurrence',
   accounts_link_account: 'Link Account',
   accounts_file_import: 'File Import',
   accounts_search: 'Search',
@@ -243,8 +252,10 @@ const t: TranslationSet = {
   acct_real_estate_desc: 'Property value tracking',
   acct_vehicle: 'Vehicle',
   acct_vehicle_desc: 'Car or vehicle value',
-  acct_loan: 'Loan',
-  acct_loan_desc: 'Mortgage, personal loan, or debt owed',
+  acct_loan_received: 'Received Loan',
+  acct_loan_received_desc: 'Mortgage, personal loan, or debt you owe',
+  acct_loan_granted: 'Granted Loan',
+  acct_loan_granted_desc: 'Money you have lent to someone else',
 
   // Filter bar
   filter_all: 'All',
@@ -309,6 +320,11 @@ const t: TranslationSet = {
   reflect_net_worth: 'Net Worth',
   reflect_assets: 'Assets',
   reflect_debts: 'Debts',
+  reflect_total_worth: 'Total Worth',
+  reflect_loans_section: 'Loans (excluded from net worth)',
+  reflect_loans_received: 'Received Loans',
+  reflect_loans_granted: 'Granted Loans',
+  reflect_loans_hint: 'Dashed tiles are excluded from net worth',
   reflect_age_of_money: 'Age of Money',
   reflect_age_days: 'days',
   reflect_age_desc: 'Average days between earning and spending. Higher = more financial buffer.',

@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { fmt } from '@/lib/format';
 import { useI18n } from '@/lib/i18n';
-import { ChevronDown, ChevronRight, Plus, X, RotateCcw, RotateCw, Archive, Trash2, Pencil } from 'lucide-react';
+import { ChevronDown, ChevronRight, Plus, X, RotateCcw, Archive, Trash2, Pencil } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import BudgetRow from '@/components/BudgetRow';
@@ -312,7 +312,10 @@ export default function PlanPage() {
   }
   for (const b of budgets) {
     const key = String(b.group_id);
-    if (groups[key]) groups[key].rows.push(b);
+    if (!groups[key]) {
+      groups[key] = { name: b.group_name ?? '(Keine Gruppe)', sort: 9999, rows: [], id: b.group_id, isHidden: false };
+    }
+    groups[key].rows.push(b);
   }
   const sortedGroups = Object.entries(groups).sort((a, b) => a[1].sort - b[1].sort);
   const allSortedIds = sortedGroups.flatMap(([, g]) => filterRows(g.rows).map(r => r.category_id));
@@ -395,9 +398,14 @@ export default function PlanPage() {
             className="flex items-center gap-3 px-4 py-2 rounded-lg"
             style={{ backgroundColor: readyToAssign < 0 ? '#dc2626' : '#16a34a' }}
           >
-            <span className="text-white font-bold text-lg">{fmt(readyToAssign)}</span>
+            {Math.abs(readyToAssign) < 0.005
+              ? <span className="text-white font-bold text-lg">✓</span>
+              : <span className="text-white font-bold text-lg">{fmt(readyToAssign)}</span>
+            }
             <div>
-              <div className="text-white/80 text-xs">{t('plan_ready_to_assign')}</div>
+              <div className="text-white/80 text-xs">
+                {Math.abs(readyToAssign) < 0.005 ? t('plan_all_assigned') : t('plan_ready_to_assign')}
+              </div>
             </div>
           </div>
         </div>
@@ -442,15 +450,6 @@ export default function PlanPage() {
       <div className="flex flex-1 overflow-hidden">
         {/* Budget table area */}
         <div className="flex-1 overflow-y-auto">
-          {/* Table toolbar */}
-          <div className="flex items-center gap-2 px-6 py-2 bg-white border-b sticky top-0 z-10">
-            <button className="flex items-center gap-1 text-sm text-gray-600 hover:text-gray-900 border border-gray-200 rounded px-2 py-1">
-              {t('plan_category_group')} <ChevronDown size={12} />
-            </button>
-            <button className="p-1 text-gray-400 hover:text-gray-700"><RotateCcw size={14} /></button>
-            <button className="p-1 text-gray-400 hover:text-gray-700"><RotateCw size={14} /></button>
-          </div>
-
           {/* Budget table */}
           <DndContext
             sensors={sensors}
@@ -462,7 +461,7 @@ export default function PlanPage() {
           <SortableContext items={allSortedIds} strategy={verticalListSortingStrategy}>
           <table className="w-full border-collapse min-w-[500px]">
             <thead>
-              <tr className="bg-gray-50 border-b border-gray-200 text-xs font-semibold text-gray-500 uppercase tracking-wide sticky top-[41px] z-10">
+              <tr className="bg-gray-50 border-b border-gray-200 text-xs font-semibold text-gray-500 uppercase tracking-wide sticky top-0 z-10">
                 <th className="w-8 px-3 py-2" />
                 <th className="px-3 py-2 text-left">{t('plan_col_category')}</th>
                 <th className="px-3 py-2 text-right w-36">{t('plan_col_assigned')}</th>

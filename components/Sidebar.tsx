@@ -20,6 +20,7 @@ interface Account {
   id: number;
   name: string;
   type: string;
+  subtype: string | null;
   balance: number;
   on_budget: number;
   starred: number;
@@ -168,7 +169,9 @@ export default function Sidebar({ isOpen, onClose }: { isOpen: boolean; onClose:
   const bankAccounts = accounts.filter(a => active(a) && (a.type === 'checking' || a.type === 'savings') && a.on_budget === 1).sort(byStarred);
   const cash         = accounts.filter(a => active(a) && a.type === 'cash'   && a.on_budget === 1).sort(byStarred);
   const credit       = accounts.filter(a => active(a) && a.type === 'credit' && a.on_budget === 1).sort(byStarred);
-  const tracking     = accounts.filter(a => active(a) && a.on_budget === 0   && a.type !== 'closed').sort(byStarred);
+  const tracking       = accounts.filter(a => active(a) && a.on_budget === 0 && a.type !== 'closed' && a.subtype !== 'loan_received' && a.subtype !== 'loan_granted').sort(byStarred);
+  const loansReceived  = accounts.filter(a => active(a) && a.subtype === 'loan_received').sort(byStarred);
+  const loansGranted   = accounts.filter(a => active(a) && a.subtype === 'loan_granted').sort(byStarred);
   const closed       = accounts.filter(a => active(a) && a.type === 'closed').sort(byStarred);
   const archived     = accounts.filter(a => a.archived === 1).sort(byStarred);
 
@@ -497,6 +500,8 @@ export default function Sidebar({ isOpen, onClose }: { isOpen: boolean; onClose:
           <AccountGroup title={t('sidebar_account_group_cash')} items={cash} />
           <AccountGroup title={t('sidebar_account_group_credit')} items={credit} />
           <AccountGroup title={t('sidebar_account_group_tracking')} items={tracking} />
+          <AccountGroup title={t('sidebar_account_group_loans_received')} items={loansReceived} />
+          <AccountGroup title={t('sidebar_account_group_loans_granted')} items={loansGranted} />
           <AccountGroup title={t('sidebar_account_group_closed')} items={closed} />
           <AccountGroup title={t('sidebar_account_group_archived')} items={archived} muted />
         </div>

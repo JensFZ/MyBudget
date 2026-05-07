@@ -35,10 +35,55 @@ export async function GET(req: NextRequest) {
   });
 
   const accounts = db.prepare(
-    "SELECT balance FROM accounts WHERE vault_id = ? AND type != 'closed'"
+    "SELECT balance FROM accounts WHERE vault_id = ? AND type != 'closed' AND COALESCE(subtype,'') NOT IN ('loan_received','loan_granted')"
   ).all(ctx.vaultId) as { balance: number }[];
   const assets = accounts.filter(a => a.balance > 0).reduce((s, a) => s + a.balance, 0);
   const debts = accounts.filter(a => a.balance < 0).reduce((s, a) => s + a.balance, 0);
 
-  return NextResponse.json({ monthly, netWorth: assets + debts, assets, debts, ageOfMoney: 125 });
+  const loanAccounts = db.prepare(
+    "SELECT name, balance, subtype FROM accounts WHERE vault_id = ? AND COALESCE(subtype,'') IN ('loan_received','loan_granted') AND type != 'closed'"
+  ).all(ctx.vaultId) as { name: string; balance: number; subtype: string }[];
+  const loansReceived = loanAccounts.filter(a => a.subtype === 'loan_received').reduce((s, a) => s + a.balance, 0);
+  const loansGranted  = loanAccounts.filter(a => a.subtype === 'loan_granted').reduce((s, a) => s + a.balance, 0);
+
+  const allTxns = db.prepare(`
+    SELECT t.date, t.amount
+    FROM transactions t
+    JOIN accounts a ON t.account_id = a.id
+    WHERE a.vault_id = ?
+      AND a.on_budget = 1
+      AND t.transfer_account_id IS NULL
+      AND COALESCE(a.subtype,'') NOT IN ('loan_received','loan_granted')
+    ORDER BY t.date ASC, t.id ASC
+  `).all(ctx.vaultId) as { date: string; amount: number }[];
+
+  const wallet: { date: string; remaining: number }[] = [];
+  const spendingAges: number[] = [];
+
+  for (const tx of allTxns) {
+    if (tx.amount > 0) {
+      wallet.push({ date: tx.date, remaining: tx.amount });
+    } else {
+      let toSpend = Math.abs(tx.amount);
+      let weightedDays = 0, weightedAmt = 0;
+      while (toSpend > 0.001 && wallet.length > 0) {
+        const oldest = wallet[0];
+        const used = Math.min(oldest.remaining, toSpend);
+        const days = (new Date(tx.date).getTime() - new Date(oldest.date).getTime()) / 86400000;
+        weightedDays += days * used;
+        weightedAmt  += used;
+        toSpend          -= used;
+        oldest.remaining -= used;
+        if (oldest.remaining < 0.001) wallet.shift();
+      }
+      if (weightedAmt > 0) spendingAges.push(weightedDays / weightedAmt);
+    }
+  }
+
+  const last10 = spendingAges.slice(-10);
+  const ageOfMoney: number | null = last10.length > 0
+    ? Math.round(last10.reduce((a, b) => a + b, 0) / last10.length)
+    : null;
+
+  return NextResponse.json({ monthly, netWorth: assets + debts, assets, debts, loansReceived, loansGranted, ageOfMoney });
 }

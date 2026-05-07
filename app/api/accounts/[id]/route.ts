@@ -30,15 +30,16 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
   if (!account) return NextResponse.json({ error: 'Not found' }, { status: 404 });
 
   const body = await req.json();
-  const { name, type, on_budget, starred, archived } = body;
+  const { name, type, on_budget, starred, archived, subtype } = body;
 
   const fields: string[] = [];
-  const values: (string | number)[] = [];
+  const values: (string | number | null)[] = [];
   if (name !== undefined)     { fields.push('name = ?');     values.push(name); }
   if (type !== undefined)     { fields.push('type = ?');     values.push(type); }
   if (on_budget !== undefined){ fields.push('on_budget = ?'); values.push(on_budget); }
   if (starred !== undefined)  { fields.push('starred = ?');  values.push(starred); }
   if (archived !== undefined) { fields.push('archived = ?'); values.push(archived); }
+  if (subtype !== undefined)  { fields.push('subtype = ?');  values.push(subtype ?? null); }
 
   if (fields.length === 0) return NextResponse.json({ error: 'No fields' }, { status: 400 });
 
