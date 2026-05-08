@@ -45,14 +45,18 @@ interface BudgetData {
 
 type FilterType = 'all' | 'overspent' | 'underfunded' | 'overfunded' | 'available';
 
-function SortableBudgetRow(props: React.ComponentProps<typeof BudgetRow>) {
-  const { attributes, listeners, setNodeRef, setActivatorNodeRef, transform, transition, isDragging } = useSortable({ id: props.categoryId });
+function SortableBudgetRow(props: React.ComponentProps<typeof BudgetRow> & { activeGroupId?: number | null; groupId?: number }) {
+  const { activeGroupId, groupId, ...rest } = props;
+  const { attributes, listeners, setNodeRef, setActivatorNodeRef, transform, transition, isDragging } = useSortable({ id: rest.categoryId });
+  // Suppress displacement transform during cross-group drags — avoids items visually
+  // sliding across group headers into a different group while dragging.
+  const crossGroup = activeGroupId != null && activeGroupId !== groupId;
   return (
     <BudgetRow
-      {...props}
+      {...rest}
       dragRef={setNodeRef}
       dragActivatorRef={setActivatorNodeRef}
-      dragStyle={{ transform: CSS.Transform.toString(transform), transition }}
+      dragStyle={crossGroup ? undefined : { transform: CSS.Transform.toString(transform), transition }}
       dragHandleListeners={listeners as Record<string, unknown>}
       dragHandleAttributes={attributes as unknown as Record<string, unknown>}
       isDragging={isDragging}
@@ -313,6 +317,9 @@ export default function PlanPage() {
   const allSortedIds = sortedGroups.flatMap(([key, g]) =>
     collapsed[key] ? [] : filterRows(g.rows).map(r => r.category_id)
   );
+  const activeGroupId = activeId != null
+    ? (budgets.find(b => b.category_id === activeId)?.group_id ?? null)
+    : null;
   const overspentCount = budgets.filter(b => b.available < 0).length;
 
   const [y, m] = month.split('-').map(Number);
@@ -574,6 +581,8 @@ export default function PlanPage() {
                     {!collapsed[key] && (filter === 'all' ? group.rows : filtered).map(row => (
                       <SortableBudgetRow
                         key={row.category_id}
+                        activeGroupId={activeGroupId}
+                        groupId={row.group_id}
                         categoryId={row.category_id}
                         name={row.category_name}
                         color={row.category_color}
